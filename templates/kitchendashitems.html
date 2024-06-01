@@ -1,0 +1,81 @@
+
+{% for item in order_details %}
+<div class="col-lg-4">
+    <div class="card card-block card-stretch card-height-helf"
+        style="box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;box-sizing: border-box !important;" data-toggle="modal"
+        data-target="#exampleModalScrollable{{cat.id}}">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-8">
+
+                    <h5>Order: {{item.order}}</h5>
+                </div>
+                <div class="col-4">
+                    <h6>Time: {{item.order.create_date|time:"H:i"}}</h6>
+
+                </div>
+                <div class="col-12">
+                    <table class="table">
+                        {% for i in item.orderitem %}
+                        <tr>
+                            <th>{{i.menu_item.name}} <br>
+                            <span class="text-sm">(Potion: {{i.menu_item.potion}})</span></th>
+                            <th>{{i.quantity}}</th>
+                            <td>
+                                {% if i.menu_item.completion_status == True %}
+                                <span class="badge bg-success">completed</span>
+                                {% else %}
+                                <span class="badge bg-warning">Progress</span>
+                                {% endif %}
+
+                                <button data-menu-item-id ="{{i.id}}" class="btn btn-sm btn-dark finish">Finish</button></td>
+                        </tr>
+                        {% endfor %}
+                        
+                        <tr>
+                            <th colspan="3">
+                                <div class="row">
+                                    <div class="col-6 mt-2">
+                                        <button  id="progress" data-order-item-id="{{item.order.id}}" class="btn btn-info progre">In Progress</button>
+                                    </div>
+                                        <div class="col-6 mt-2">
+                                        <button data-order-item-id="{{item.order.id}}" class="btn btn-dark ready">Order Ready</button>
+                                    </div>
+                                    <div class="col-6 mt-2">
+                                        <a href="{%url 'Status_Change_OrderCompeletion' item.order.id %}"  class="btn btn-success competion">completed Order</a>
+                                    </div>
+                                    <div class="col-6 mt-2">
+                                        <a href="javascript:void(0);" onclick="printReceipt('{{ item.order.id }}')" class="btn btn-warning">Print Reciept</a>
+                                    </div>
+                                </div>
+                            </th>
+                        </tr>
+                        <tr>
+                            <th colspan="3" class="text-center">
+                                Status: <span class="badge bg-success-light">{{item.order.status}}</span>
+
+                            </th>
+                        </tr>
+                    </table>
+                    
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    function printReceipt(orderId) {
+        var printWindow = window.open('/Products/receipt/' + orderId, '_blank');
+        printWindow.onload = function() {
+            printWindow.print();
+        };
+    }
+</script>
+
+
+
+{% endfor %}

@@ -1,0 +1,181 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block content %}
+
+<div class="content-page">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="card card-transparent card-block card-stretch card-height border-none">
+                    <div class="card-body p-0 mt-lg-2 mt-0">
+                        <h3 class="mb-3">CoffyByte-POS</h3>
+                        <a href="#" class="btn btn-info border add-btn shadow-none mx-2  d-md-block mt-2"
+                            data-toggle="modal" data-target="#new-order"><i class="las la-plus mr-2"></i>New
+                            Order</a>
+
+                        <a href="#" class="btn btn-dark border add-btn shadow-none mx-2  d-md-block mt-2"
+                            data-toggle="modal" data-target="#new-order"><svg class="svg-icon" id="p-dash7" width="17"
+                                height="17" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>&nbsp;&nbsp; Orders</a>
+
+                        <!-- model for oreder -->
+                        <div class="modal fade" id="new-order" tabindex="-1" role="dialog" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-body">
+                                        <div class="popup text-left">
+                                            <h4 class="mb-3">New Order</h4>
+                                            <div class="content create-workform bg-body">
+                                                <form action="{%url 'CreateOrder' %}" method="post">
+                                                    {% csrf_token %}
+                                                    <div class="pb-3">
+                                                        <label class="mb-2">Select Table: </label>
+                                                        <select name="table" id="" required class="form-control">
+                                                            <option value="" selected disabled>-------</option>
+                                                            {% for t in table %}
+                                                            <option value="{{t.id}}">{{t}}</option>
+                                                            {% endfor %}
+                                                        </select>
+
+                                                    </div>
+                                                    <div class="col-lg-12 mt-4">
+                                                        <div
+                                                            class="d-flex flex-wrap align-items-ceter justify-content-center">
+                                                            <div class="btn btn-primary mr-4" data-dismiss="modal">
+                                                                Cancel</div>
+                                                            <button type="submit"
+                                                                class="btn btn-outline-primary">Create</button>
+                                                        </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- <p class="mb-0 mr-4">Your dashboard gives you views of key performance or business process.</p> -->
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="row">
+                <div class="col-4">
+                    <div class="card card-block card-stretch card-height">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-4 card-total-sale">
+
+                                <div>
+                                    <p class="mb-2">Orders</p>
+                                    <h4>30</h4>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class=" col-4">
+                    <div class="card card-block card-stretch card-height">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-4 card-total-sale">
+
+                                <div>
+                                    <p class="mb-2">Prepering</p>
+                                    <h4>20</h4>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card card-block card-stretch card-height">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-4 card-total-sale">
+
+                                <div>
+                                    <p class="mb-2">Pending</p>
+                                    <h4>10</h4>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-12">
+            <div class="card card-transparent card-block card-stretch mb-4">
+                <div class="card-header d-flex align-items-center justify-content-between p-0">
+                    <div class="header-title">
+                        <h4 class="card-title mb-0">Orders</h4>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        {% for order in order_details %}
+
+        <div class="col-lg-4">
+            <div class="card card-block card-stretch card-height-helf"
+                style="box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;box-sizing: border-box !important;" data-toggle="modal"
+                data-target="#exampleModalScrollable{{cat.id}}">
+                <div class="card-body">
+                    <div class="d-flex align-items-top justify-content-between row">
+                        <div class="col-8">
+                            <h5><span style="font-size: small;">Order: &nbsp;&nbsp;&nbsp;</span>{{order.order}}</h5>
+                            <p class="mb-0">Total Amount: {{order.total_price}}</p>
+                            <p class="mb-0">Total Items: {{order.total_items}}</p>
+                            <p>Status: <span class="badge bg-info">{{order.order.status}}</span></p>
+                            <button class="btn btn-dark btn-sm" >Settle Bill</button>
+                            <a href="javascript:void(0);"  onclick="printReceipt('{{ order.order.id }}')" class="btn btn-warning btn-sm">Print Bill</a>
+                        </div>
+                        <div class="col-4">
+                            
+                            <h3 class="text-center">{{order.order.table}}</h3>
+                            <h6><span style="font-size: small;">Time: </span>{{order.order.create_date|time:"H:i"}}</h6>
+                            <a href="{%url 'OrderSingle' order.order.id %}" class="btn btn-outline-primary btn-sm mt-3">View</a>
+                            <br>
+                            {% if order.order.take_order == True %}
+                            <h6 class="badge bg-warning">Order In Kitchen</h6>
+                            {% endif %}
+                            {% if order.order.completion_status == True %}
+                            <h6 class="badge bg-success">Order Completed</h6>
+                            {% endif %}
+
+
+                            
+                        </div>
+
+                    </div>
+                    <!-- <div id="layout1-chart-3" class="layout-chart-1"></div> -->
+                </div>
+            </div>
+        </div>
+
+        {% endfor %}
+
+
+    </div>
+</div>
+</div>
+
+<script>
+    function printReceipt(orderId) {
+        var printWindow = window.open('/Products/receipt/' + orderId, '_blank');
+        printWindow.onload = function() {
+            printWindow.print();
+        };
+    }
+</script>
+
+{% endblock %}

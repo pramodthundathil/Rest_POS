@@ -1,0 +1,138 @@
+{% extends 'index.html' %}
+{% block content %}
+
+
+
+<div class="content-page">
+    <div class="container-fluid">
+        <div class="row" id="table-container">
+
+
+           {% include 'kitchendashitems.html' %}
+
+          
+
+
+
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var socket = new WebSocket('ws://' + window.location.host + '/ws/updates/');
+
+        socket.onmessage = function(event) {
+            var data = JSON.parse(event.data);
+            if (data.message === "Database updated") {
+                console.log("data updated");
+                // Reload table content using AJAX
+                $.ajax({
+                    url: "{% url 'refresh_table' %}",
+                    type: "GET",
+                    success: function(response) {
+                        $('#table-container').html(response.table_html);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(error);
+                    }
+                });
+            }
+        };
+
+        socket.onopen = function() {
+            console.log("WebSocket connection opened.");
+        };
+
+        socket.onerror = function(error) {
+            console.error("WebSocket error:", error);
+        };
+
+        socket.onclose = function(event) {
+            console.log("WebSocket connection closed:", event);
+        };
+    });
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $(document).on("click", ".progre", function (){
+            console.log("Progress Click Working....")
+            var orderid = $(this).data("order-item-id");
+
+            $.ajax({
+                url: "{% url 'Status_Change' %}", // URL pattern to add the item to the order
+                type: "POST",
+                data: {
+                    'orderid': orderid,
+                    // Assuming order.id is available in the context
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    // Update the order summary div with the new order items
+                    $("#table-container").html(response.order_html);
+                },
+                error: function (xhr, errmsg, err) {
+                    console.log(xhr.status + ": " + xhr.responseText);
+                }
+            });
+        });
+    });
+
+    $(document).ready(function () {
+        $(document).on("click", ".ready", function (){
+            console.log("Progress Click Working....")
+            var orderid = $(this).data("order-item-id");
+
+            $.ajax({
+                url: "{% url 'Status_Change_Order_Ready' %}", // URL pattern to add the item to the order
+                type: "POST",
+                data: {
+                    'orderid': orderid,
+                     // Assuming order.id is available in the context
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    // Update the order summary div with the new order items
+                    $("#table-container").html(response.order_html);
+                },
+                error: function (xhr, errmsg, err) {
+                    console.log(xhr.status + ": " + xhr.responseText);
+                }
+            });
+        });
+    });
+
+
+    $(document).ready(function () {
+    // Use event delegation to handle dynamic elements
+    $(document).on("click", ".finish", function () {
+        console.log("Progress Click Working....");
+        var menuid = $(this).data("menu-item-id");
+
+        $.ajax({
+            url: "{% url 'Status_Change_Menu_Finish' %}", // URL pattern to add the item to the order
+            type: "POST",
+            data: {
+                'orderid': menuid, // Assuming order.id is available in the context
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function (response) {
+                // Update the order summary div with the new order items
+                $("#table-container").html(response.order_html);
+            },
+            error: function (xhr, errmsg, err) {
+                console.log(xhr.status + ": " + xhr.responseText);
+            }
+        });
+    });
+});
+
+
+
+    
+</script>
+
+
+{% endblock %}
