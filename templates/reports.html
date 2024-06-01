@@ -1,0 +1,61 @@
+{% extends 'index.html' %}
+{% block content %}
+
+
+<div class="content-page">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 category-container mb-3">
+                <div class="card card-transparent card-block card-stretch mb-4">
+                    <div class="card-header d-flex align-items-center justify-content-between p-0">
+                        <div class="header-title">
+                            <h4 class="card-title mb-0">Reports</h4>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 category-container mb-3">
+                <div class="card card-transparent card-block card-stretch mb-4">
+                    <div class="col-lg-12">
+                        <div class="card card-block card-stretch card-height-helf"
+                            style="box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;box-sizing: border-box !important;"
+                            data-toggle="modal" data-target="#exampleModalScrollable{{cat.id}}">
+                            <div class="card-body">
+                                <h3>Report For Today</h3>
+                                
+                                <a href="{%url 'generate_excel_report' %}" class="btn btn-outline-dark">Generate sale Report For Today</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="col-lg-6">
+                <div class="card card-block card-stretch card-height-helf"
+                    style="box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;box-sizing: border-box !important;"
+                    data-toggle="modal" data-target="#exampleModalScrollable{{cat.id}}">
+                    <div class="card-body">
+                        <h3>Date Wise Report</h3>
+                        <form action="{%url 'generate_orders_report' %}" method="post">
+                            {% csrf_token %}
+                        <label for="">Enter Start Date</label>
+                        <input type="date" name="sdate" required class="form-control">
+                        <label for="">Enter end Date</label>
+                        <input type="date" name="edate" required class="form-control"><br>
+                        <button type="submit" class="btn btn-outline-dark">Generate Report</button>
+                    </form>
+                    </div>
+                </div>
+            </div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

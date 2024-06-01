@@ -32,7 +32,7 @@ def SignIn(request):
             request.session['username'] = username
             request.session['password'] = password
             login(request, user1)
-            return redirect('Index')
+            return redirect('PosIndex')
         
         else:
             messages.error(request,'Username or Password Incorrect')

@@ -70,6 +70,7 @@ class Checkout(models.Model):
     total_price = models.FloatField()
     payment_method = models.CharField(max_length=50)
     payment_status = models.CharField(max_length=20, choices=(("Pending", "Pending"), ("Paid", "Paid")))
+    datetime = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Checkout for Order {self.order.id}"

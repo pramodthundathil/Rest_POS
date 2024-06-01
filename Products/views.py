@@ -8,6 +8,7 @@ from django.template.loader import render_to_string
 
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from Home.decorators import admin_only, allowed_users
 
 # Create your views here.
 
@@ -122,7 +123,7 @@ def Pos(request):
     category = FoodCategory.objects.all()
     menu = Menu.objects.all()
     table = Tables.objects.all()
-    orders = Order.objects.filter(user = request.user)
+    orders = Order.objects.filter(user = request.user, checkout_status = False)
     order_details = []
 
     for order in orders:
@@ -140,6 +141,34 @@ def Pos(request):
         "table":table,
         "orders":orders,
         'order_details': order_details,
+    }
+    return render(request,'posinterface.html',context)
+
+@admin_only
+def PosIndex(request):
+    category = FoodCategory.objects.filter()
+    menu = Menu.objects.all()
+    table = Tables.objects.all()
+    orders = Order.objects.filter(checkout_status = False)
+    order_details = []
+
+    for order in orders:
+        total_items = sum(item.quantity for item in order.items.all())
+        total_price = sum(item.get_total_price() for item in order.items.all())
+        order_details.append({
+            'order': order,
+            'total_items': total_items,
+            'total_price': total_price,
+
+        })
+
+    context = {
+        "category":category,
+        "menu":menu,
+        "table":table,
+        "orders":orders,
+        'order_details': order_details,
+        
     }
     return render(request,'posinterface.html',context)
 
@@ -260,7 +289,7 @@ def receipt_view(request, order_id):
 
 
 def KitchenDashboard(request):
-    orders = Order.objects.filter( take_order= True, completion_status = False )
+    orders = Order.objects.filter( take_order= True, completion_status = False, checkout_status = False )
     order_details = []
     orderitem = OrderItem.objects.all()
     for order in orders:
@@ -281,7 +310,7 @@ def KitchenDashboard(request):
 
 
 def refresh_table(request):
-    orders = Order.objects.filter(take_order = True,completion_status = False)
+    orders = Order.objects.filter(take_order = True,completion_status = False, checkout_status = False)
     order_details = []
     orderitem = OrderItem.objects.all()
     for order in orders:
@@ -306,7 +335,7 @@ def Status_Change(request):
         order.status = "In Progress"
         order.save()
         
-        orders = Order.objects.filter(take_order=True,completion_status = False)
+        orders = Order.objects.filter(take_order=True,completion_status = False, checkout_status = False)
         order_details = []
         for order in orders:
             orderitem = OrderItem.objects.filter(order=order)
@@ -328,7 +357,7 @@ def Status_Change_Order_Ready(request):
         order.status = "Order Ready"
         order.save()
         
-        orders = Order.objects.filter(take_order=True,completion_status = False)
+        orders = Order.objects.filter(take_order=True,completion_status = False, checkout_status = False)
         order_details = []
         for order in orders:
             orderitem = OrderItem.objects.filter(order=order)
@@ -351,7 +380,7 @@ def Status_Change_Menu_Finish(request):
         order_item.completion_status = True
         order_item.save()
         
-        orders = Order.objects.filter(take_order=True,completion_status = False)
+        orders = Order.objects.filter(take_order=True,completion_status = False, checkout_status = False)
         order_details = []
         for order in orders:
             orderitem = OrderItem.objects.filter(order=order)
@@ -375,6 +404,157 @@ def Status_Change_OrderCompeletion(request,pk):
     order.take_order = False
     order.save()
     return redirect("KitchenDashboard")
+
+def SettleOrder(request,pk):
+    order = Order.objects.get(id = pk)
+    if request.method =="POST":
+        payment = request.POST.get("payment")
+        order_items = OrderItem.objects.filter(order=order)
+        total_price = sum(item.menu_item.price * item.quantity for item in order_items)
+        checkout = Checkout.objects.create(
+            order = order,
+            payment_method = payment,
+            payment_status = "Paid",
+            total_price = total_price 
+            )
+        checkout.save()
+        order.checkout_status = True
+        order.save()
+        messages.info(request,"Bill Settled....")
+        return redirect("Pos")
+    
+@allowed_users(allowed_roles=["admin"])   
+def ViewCheckouts(request):
+    checkout = Checkout.objects.all()
+    context = {
+        "checkout":checkout
+    }
+    return render(request,"settledorders.html",context)
+
+
+def Reports(request):
+    return render(request,"reports.html")
+
+
+import openpyxl
+from openpyxl.styles import Font
+from django.http import HttpResponse
+from django.utils.timezone import now
+from django.utils.dateparse import parse_date
+from .models import Order
+
+def generate_excel_report(request):
+    # Create a new Excel workbook and add a worksheet
+    workbook = openpyxl.Workbook()
+    worksheet = workbook.active
+    worksheet.title = 'Today\'s Orders Report'
+
+    # Define the columns
+    columns = ['Order ID', 'Order Date', 'Table', 'Total Price', 'Payment Method', 'Payment Status']
+
+    # Set the header row
+    row_num = 1
+    for col_num, column_title in enumerate(columns, 1):
+        cell = worksheet.cell(row=row_num, column=col_num)
+        cell.value = column_title
+        cell.font = Font(bold=True)
+
+    # Fetch today's orders
+    today = now().date()
+    orders = Order.objects.filter(create_date__date=today)
+
+    # Add the order data to the worksheet
+    for order in orders:
+        checkout = Checkout.objects.filter(order=order).first()
+        row_num += 1
+        worksheet.cell(row=row_num, column=1).value = order.id
+        worksheet.cell(row=row_num, column=2).value = order.create_date.strftime('%Y-%m-%d %H:%M')
+        worksheet.cell(row=row_num, column=3).value = order.table.Table_number if order.table else 'N/A'
+        worksheet.cell(row=row_num, column=4).value = checkout.total_price if checkout else 'N/A'
+        worksheet.cell(row=row_num, column=5).value = checkout.payment_method if checkout else 'N/A'
+        worksheet.cell(row=row_num, column=6).value = checkout.payment_status if checkout else 'N/A'
+
+    # Set the column widths
+    for col in worksheet.columns:
+        max_length = 0
+        column = col[0].column_letter  # Get the column name
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(cell.value)
+            except:
+                pass
+        adjusted_width = (max_length + 2)
+        worksheet.column_dimensions[column].width = adjusted_width
+
+    # Create an HTTP response with the Excel file
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=todays_orders_report.xlsx'
+    workbook.save(response)
+    return response
+
+def generate_orders_report(request):
+    if request.method == "POST":
+        # Get start date and end date from the request
+        start_date = request.POST.get('sdate')
+        end_date = request.POST.get('edate')
+
+        # Parse the dates
+        # start_date = parse_date(start_date)
+        # end_date = parse_date(end_date)
+
+        # Create a new Excel workbook and add a worksheet
+        workbook = openpyxl.Workbook()
+        worksheet = workbook.active
+        worksheet.title = 'Orders Report'
+
+        # Define the columns
+        columns = ['Order ID', 'Order Date', 'Table', 'Total Price', 'Payment Method', 'Payment Status']
+
+        # Set the header row
+        row_num = 1
+        for col_num, column_title in enumerate(columns, 1):
+            cell = worksheet.cell(row=row_num, column=col_num)
+            cell.value = column_title
+            cell.font = Font(bold=True)
+
+        # Fetch orders within the date range
+        orders = Order.objects.filter(create_date__gte=start_date, create_date__lte=end_date)
+
+        # Add the order data to the worksheet
+        for order in orders:
+            checkout = Checkout.objects.filter(order=order).first()
+            row_num += 1
+            worksheet.cell(row=row_num, column=1).value = order.id
+            worksheet.cell(row=row_num, column=2).value = order.create_date.strftime('%Y-%m-%d %H:%M')
+            worksheet.cell(row=row_num, column=3).value = order.table.Table_number if order.table else 'N/A'
+            worksheet.cell(row=row_num, column=4).value = checkout.total_price if checkout else 'N/A'
+            worksheet.cell(row=row_num, column=5).value = checkout.payment_method if checkout else 'N/A'
+            worksheet.cell(row=row_num, column=6).value = checkout.payment_status if checkout else 'N/A'
+
+        # Set the column widths
+        for col in worksheet.columns:
+            max_length = 0
+            column = col[0].column_letter  # Get the column name
+            for cell in col:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(cell.value)
+                except:
+                    pass
+            adjusted_width = (max_length + 2)
+            worksheet.column_dimensions[column].width = adjusted_width
+
+        # Create an HTTP response with the Excel file
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename=orders_report_{start_date}_to_{end_date}.xlsx'
+        workbook.save(response)
+        return response
+
+
+
+
+
         
         
 

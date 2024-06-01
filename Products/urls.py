@@ -3,7 +3,7 @@ from .import views
 
 
 urlpatterns = [
-
+    path("PosIndex",views.PosIndex,name="PosIndex"),
     path("List_Category",views.List_Category,name="List_Category"),
     path("Add_Category",views.Add_Category,name="Add_Category"),
     path("DeleteCategory/<int:pk>",views.DeleteCategory,name="DeleteCategory"),
@@ -28,6 +28,12 @@ urlpatterns = [
     path('Status_Change_Order_Ready', views.Status_Change_Order_Ready, name='Status_Change_Order_Ready'),
     path('Status_Change_OrderCompeletion/<int:pk>', views.Status_Change_OrderCompeletion, name='Status_Change_OrderCompeletion'),
     path('Status_Change_Menu_Finish', views.Status_Change_Menu_Finish, name='Status_Change_Menu_Finish'),
+    path('SettleOrder/<int:pk>', views.SettleOrder, name='SettleOrder'),
+    path('ViewCheckouts', views.ViewCheckouts, name='ViewCheckouts'),
+    path('Reports', views.Reports, name='Reports'),
+    path('generate_excel_report', views.generate_excel_report, name='generate_excel_report'),
+    path('generate_orders_report', views.generate_orders_report, name='generate_orders_report'),
+
 
 
 
