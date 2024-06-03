@@ -54,9 +54,9 @@
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>Potion *</label>
+                                            <label>Portion *</label>
                                             <select name="potion" required class="selectpicker form-control" data-style="py-0">
-                                                <option selected disabled>Select Potion Of Food</option>
+                                                <option selected disabled>Select Portion Of Food</option>
                                                 <option value="Quarter">Quarter</option>
                                                 <option value="Half">Half</option>
                                                 <option value="Full">Full</option>
@@ -89,6 +89,26 @@
                                             <input type="number" name="stock"  class="form-control" placeholder="Enter Stock"
                                                 required>
                                             <div class="help-block with-errors"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Tax Method *</label>
+                                            <select name="tax_name" class="selectpicker form-control" required data-style="py-0">
+                                                <option value="Exclusive" >Exclusive</option>
+                                                <option value="Inclusive" >Inclusive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Tax Value <small>(in Percentage %)</small> *</label>
+                                            <select name="tax_value" required class="selectpicker form-control" data-style="py-0">
+                                                <option selected disabled>--------------------------------------</option>
+                                                {% for t in tax %}
+                                                <option value="{{t.id}}">{{t}}</option>
+                                                {% endfor%}
+                                            </select>
                                         </div>
                                     </div>
                                     <!-- <div class="col-md-12">

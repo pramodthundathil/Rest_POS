@@ -24,6 +24,7 @@ urlpatterns = [
     path('receipt/<int:order_id>/', views.receipt_view, name='receipt'),
     path('KitchenDashboard', views.KitchenDashboard, name='KitchenDashboard'),
     path('refresh_table', views.refresh_table, name='refresh_table'),
+    path('refresh_order', views.refresh_order, name='refresh_order'),
     path('Status_Change', views.Status_Change, name='Status_Change'),
     path('Status_Change_Order_Ready', views.Status_Change_Order_Ready, name='Status_Change_Order_Ready'),
     path('Status_Change_OrderCompeletion/<int:pk>', views.Status_Change_OrderCompeletion, name='Status_Change_OrderCompeletion'),
@@ -33,6 +34,10 @@ urlpatterns = [
     path('Reports', views.Reports, name='Reports'),
     path('generate_excel_report', views.generate_excel_report, name='generate_excel_report'),
     path('generate_orders_report', views.generate_orders_report, name='generate_orders_report'),
+
+
+    path('AddTax', views.AddTax, name='AddTax'),
+    path('ListTax', views.ListTax, name='ListTax'),
 
 
 

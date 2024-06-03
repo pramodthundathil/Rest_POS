@@ -14,8 +14,8 @@
       <link rel="stylesheet" href="{%static 'assets/css/backend-plugin.min.css' %}">
       <link rel="stylesheet" href="{%static 'assets/css/backend.css?v=1.0.0' %}">
       <link rel="stylesheet" href="{%static 'assets/vendor/@fortawesome/fontawesome-free/css/all.min.css' %}">
-      <link rel="stylesheet" href="{%static 'vendor/line-awesome/dist/line-awesome/css/line-awesome.min.css' %}">
-      <link rel="stylesheet" href="{%static 'vendor/remixicon/fonts/remixicon.css' %}">  
+      <link rel="stylesheet" href="{%static 'assets/vendor/line-awesome/dist/line-awesome/css/line-awesome.min.css' %}">
+      <link rel="stylesheet" href="{%static 'assets/vendor/remixicon/fonts/remixicon.css' %}">  
     </head>
   <body class="  ">
     <!-- loader Start -->
@@ -252,7 +252,7 @@
                               <svg class="svg-icon" id="p-dash9" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="9"></rect><rect x="14" y="7" width="3" height="5"></rect>
                               </svg>
-                              <span class="ml-4">Profile</span>
+                              <span class="ml-4">Settings</span>
                               <svg class="svg-icon iq-arrow-right arrow-active" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                   <polyline points="10 15 15 20 20 15"></polyline><path d="M4 4h7a4 4 0 0 1 4 4v12"></path>
                               </svg>
@@ -276,7 +276,34 @@
                                               </li>
                                 
                                       </ul>
-                                  </li>   
+                                  </li>
+        {% if request.user.groups.all.0.name == "admin"  %}
+
+                                  <li class=" ">
+                                    <a href="#tax" class="collapsed" data-toggle="collapse" aria-expanded="false">
+                                        <svg class="svg-icon" id="p-dash10" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline>
+                                        </svg>
+                                        <span class="ml-4">Tax Setting</span>
+                                        <svg class="svg-icon iq-arrow-right arrow-active" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="10 15 15 20 20 15"></polyline><path d="M4 4h7a4 4 0 0 1 4 4v12"></path>
+                                        </svg>
+                                    </a>
+                                    <ul id="tax" class="iq-submenu collapse" data-parent="#otherpage">
+                                            <li class="">
+                                                <a href="{%url 'AddTax' %}">
+                                                    <i class="las la-minus"></i><span>Add Tax Slab</span>
+                                                </a>
+                                            </li>
+                                            <li class="">
+                                                <a href="{%url 'ListTax' %}">
+                                                    <i class="las la-minus"></i><span>View Tax Slab</span>
+                                                </a>
+                                            </li>
+                              
+                                    </ul>
+                                </li> 
+                                {% endif %}  
                           </ul>
                       </li>
                   </ul>

@@ -1,0 +1,70 @@
+{% for order in order_details %}
+
+<div class="col-lg-4">
+    <div class="card card-block card-stretch card-height-helf"
+        style="box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;box-sizing: border-box !important;" data-toggle="modal"
+        data-target="#exampleModalScrollable{{cat.id}}">
+        <div class="card-body">
+            <div class="d-flex align-items-top justify-content-between row">
+                <div class="col-8">
+                    <h5><span style="font-size: small;">Order: &nbsp;&nbsp;&nbsp;</span>{{order.order}}</h5>
+                    <p class="mb-0">Total Amount: {{order.total_price}}</p>
+                    <p class="mb-0">Total Items: {{order.total_items}}</p>
+                    <p>Status: <span class="badge bg-info">{{order.order.status}}</span></p>
+                    <button class="btn btn-dark btn-sm" data-toggle="modal"
+                    data-target="#exampleModalScrollable{{order.order.id}}">Settle Bill</button>
+                    <a href="javascript:void(0);"  onclick="printReceipt('{{ order.order.id }}')" class="btn btn-warning btn-sm">Print Bill</a>
+                </div>
+                <div class="col-4">
+                    {% if request.user.groups.all.0.name == "admin" %}
+                    <h6 class="text-danger">User: {{order.order.user}}</h6>
+                    {% endif %}
+                    
+                    <h3 class="text-center">{{order.order.table}}</h3>
+                    <h6><span style="font-size: small;">Time: </span>{{order.order.create_date|time:"H:i"}}</h6>
+                    <a href="{%url 'OrderSingle' order.order.id %}" class="btn btn-outline-primary btn-sm mt-3">View</a>
+                    <br>
+                    {% if order.order.take_order == True %}
+                    <h6 class="badge bg-warning">Order In Kitchen</h6>
+                    {% endif %}
+                    {% if order.order.completion_status == True %}
+                    <h6 class="badge bg-success">Order Completed</h6>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- <div id="layout1-chart-3" class="layout-chart-1"></div> -->
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModalScrollable{{order.order.id}}" tabindex="-1" role="dialog"
+aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
+<div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalScrollableTitle">Settle Order: {{order.order}}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <form action="{%url 'SettleOrder' order.order.id %}" method="post">
+            {% csrf_token %}
+        <div class="modal-body">
+            <label for="">Payment Method:</label>
+            <select name="payment" required class="form-control" id="">
+                <option value="" selected disabled>---------------</option>
+                <option value="cash">Cash</option>
+                <option value="bank">Bank</option>
+            </select>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-success">Settle</button>
+        </div>
+    </form>
+    </div>
+</div>
+</div>
+
+{% endfor %}

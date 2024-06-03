@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import FoodCategory, Menu, Tables, Order, OrderItem, Checkout
+from .models import FoodCategory, Menu, Tables, Order, OrderItem, Checkout, Tax
 from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger 
 from django.http import JsonResponse
@@ -47,8 +47,28 @@ def DeleteCategory(request,pk):
     return redirect('List_Category')
 
 
+def AddTax(request):
+    if request.method == "POST":
+        name = request.POST.get('name')
+        tax_rate = request.POST.get('tax')
+        tax = Tax.objects.create(tax_name = name,tax_percentage = tax_rate )
+        tax.save()
+        messages.success(request,'Tax Value Added Success')
+        return redirect("ListTax")
+    return render(request,"add-tax-slab.html")
+
+def ListTax(request):
+    tax = Tax.objects.all()
+
+    context = {
+        "tax":tax
+    }
+    return render(request,"list-tax.html",context)
+
+
 def Add_Product(request):
     food_category = FoodCategory.objects.all()
+    tax = Tax.objects.all()
     description = " "
     if request.method == "POST":
         name = request.POST['name']
@@ -59,6 +79,8 @@ def Add_Product(request):
         stock = request.POST['stock']
         image = request.FILES['pic']
         description = request.POST['description']
+        tax_name = request.POST["tax_name"]
+        tax_value = request.POST["tax_value"]
 
         menu = Menu.objects.create(
             name = name, 
@@ -68,14 +90,19 @@ def Add_Product(request):
             diet =diet, 
             price = price, 
             stock = stock, 
-            description = description 
+            description = description,
+            tax = tax_name,
+            tax_value = Tax.objects.get(id = int(tax_value))
+
             )
         menu.save()
         messages.success(request,"Menu Item added Success...")
         return redirect("List_Product")
     
     context = {
-        "food_category":food_category
+        "food_category":food_category,
+        "tax":tax
+
     }
     return render(request,'add-product.html',context)
 
@@ -83,11 +110,18 @@ def List_Product(request):
     menu = Menu.objects.all()
 
     context = {
-        "menu":menu
+        "menu":menu,
     }
     return render(request,'list-product.html',context)
 
 def DeleteProduct(request,pk):
+    menu  = Menu.objects.get(id = pk)
+    if menu.status == False:
+        menu.status = True
+    else:
+        menu.status = False
+    menu.save()
+    messages.info(request,"Product Deleted....")
     return redirect("List_Product")
 
 
@@ -121,7 +155,7 @@ def Delete_Table(request,pk):
 
 def Pos(request):
     category = FoodCategory.objects.all()
-    menu = Menu.objects.all()
+    menu = Menu.objects.filter(status = True)
     table = Tables.objects.all()
     orders = Order.objects.filter(user = request.user, checkout_status = False)
     order_details = []
@@ -147,7 +181,7 @@ def Pos(request):
 @admin_only
 def PosIndex(request):
     category = FoodCategory.objects.filter()
-    menu = Menu.objects.all()
+    menu = Menu.objects.filter(status = True)
     table = Tables.objects.all()
     orders = Order.objects.filter(checkout_status = False)
     order_details = []
@@ -174,7 +208,7 @@ def PosIndex(request):
 
 def OrderSingle(request,pk):
     category = FoodCategory.objects.all()
-    menu = Menu.objects.all()
+    menu = Menu.objects.filter(status = True)
     order = Order.objects.get(id = pk)
     item = OrderItem.objects.filter(order = order)
     total_price = sum(item.get_total_price() for item in order.items.all())
@@ -186,7 +220,7 @@ def OrderSingle(request,pk):
         "menu":menu,
         "order":order,
         "item":item,
-        "total_price":total_price
+        "total_price":round(total_price,2)
     }
     return render(request,"order-single.html",context)
 
@@ -283,13 +317,13 @@ def receipt_view(request, order_id):
     context = {
         'order': order,
         'item': items,
-        'total_price': total_price,
+        'total_price': round(total_price,2),
     }
     return render(request, 'receipt.html', context)
 
 
 def KitchenDashboard(request):
-    orders = Order.objects.filter( take_order= True, completion_status = False, checkout_status = False )
+    orders = Order.objects.filter( take_order= True, completion_status = False )
     order_details = []
     orderitem = OrderItem.objects.all()
     for order in orders:
@@ -328,12 +362,49 @@ def refresh_table(request):
     table_html = render_to_string('kitchendashitems.html', context)
     return JsonResponse({'table_html': table_html})
 
+def refresh_order(request):
+    category = FoodCategory.objects.filter()
+    menu = Menu.objects.filter(status = True)
+    table = Tables.objects.all()
+    orders = Order.objects.filter(checkout_status = False)
+    order_details = []
+
+    for order in orders:
+        total_items = sum(item.quantity for item in order.items.all())
+        total_price = sum(item.get_total_price() for item in order.items.all())
+        order_details.append({
+            'order': order,
+            'total_items': total_items,
+            'total_price': total_price,
+
+        })
+
+    context = {
+        "category":category,
+        "menu":menu,
+        "table":table,
+        "orders":orders,
+        'order_details': order_details,
+        
+    }
+    table_html = render_to_string('order-datas.html', context)
+    return JsonResponse({'table_html': table_html})
+
 def Status_Change(request):
     if request.method == "POST":
         order_id = request.POST.get('orderid')  # Corrected key name
         order = get_object_or_404(Order, id=order_id)
         order.status = "In Progress"
         order.save()
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+        "updates",
+        {
+            "type": "send_update",
+            "message": "Database updated",
+            
+        }
+        )
         
         orders = Order.objects.filter(take_order=True,completion_status = False, checkout_status = False)
         order_details = []
@@ -356,6 +427,15 @@ def Status_Change_Order_Ready(request):
         order = get_object_or_404(Order, id=order_id)
         order.status = "Order Ready"
         order.save()
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+        "updates",
+        {
+            "type": "send_update",
+            "message": "Database updated",
+            
+        }
+        )
         
         orders = Order.objects.filter(take_order=True,completion_status = False, checkout_status = False)
         order_details = []
@@ -379,6 +459,15 @@ def Status_Change_Menu_Finish(request):
         order_item = get_object_or_404(OrderItem, id=order_item_id)
         order_item.completion_status = True
         order_item.save()
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+        "updates",
+        {
+            "type": "send_update",
+            "message": "Database updated",
+            
+        }
+        )
         
         orders = Order.objects.filter(take_order=True,completion_status = False, checkout_status = False)
         order_details = []
@@ -403,25 +492,45 @@ def Status_Change_OrderCompeletion(request,pk):
     order.completion_status = True
     order.take_order = False
     order.save()
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+    "updates",
+    {
+        "type": "send_update",
+        "message": "Database updated",
+        
+    }
+    )
     return redirect("KitchenDashboard")
 
-def SettleOrder(request,pk):
-    order = Order.objects.get(id = pk)
-    if request.method =="POST":
+def calculate_tax(menu_item, quantity):
+    tax_value = 0
+    tax_value = menu_item.tax_amount * quantity
+    return round(tax_value,2)
+
+def SettleOrder(request, pk):
+    order = get_object_or_404(Order, id=pk)
+    if request.method == "POST":
         payment = request.POST.get("payment")
         order_items = OrderItem.objects.filter(order=order)
         total_price = sum(item.menu_item.price * item.quantity for item in order_items)
+        total_tax_amount = sum(calculate_tax(item.menu_item, item.quantity) for item in order_items)
+
         checkout = Checkout.objects.create(
-            order = order,
-            payment_method = payment,
-            payment_status = "Paid",
-            total_price = total_price 
-            )
+            order=order,
+            payment_method=payment,
+            payment_status="Paid",
+            total_price=total_price,
+            tax_amount=total_tax_amount
+        )
         checkout.save()
         order.checkout_status = True
         order.save()
-        messages.info(request,"Bill Settled....")
+        messages.info(request, "Bill Settled....")
         return redirect("Pos")
+
+    # Render the order settlement page if it's a GET request
+    return render(request, 'settle_order.html', {'order': order})
     
 @allowed_users(allowed_roles=["admin"])   
 def ViewCheckouts(request):
@@ -436,12 +545,12 @@ def Reports(request):
     return render(request,"reports.html")
 
 
-import openpyxl
-from openpyxl.styles import Font
+
 from django.http import HttpResponse
 from django.utils.timezone import now
-from django.utils.dateparse import parse_date
-from .models import Order
+import openpyxl
+from openpyxl.styles import Font
+from .models import Order, Checkout
 
 def generate_excel_report(request):
     # Create a new Excel workbook and add a worksheet
@@ -450,7 +559,7 @@ def generate_excel_report(request):
     worksheet.title = 'Today\'s Orders Report'
 
     # Define the columns
-    columns = ['Order ID', 'Order Date', 'Table', 'Total Price', 'Payment Method', 'Payment Status']
+    columns = ['Order ID', 'Order Date', 'Table', 'Total Price', 'Tax Amount', 'Payment Method', 'Payment Status']
 
     # Set the header row
     row_num = 1
@@ -471,8 +580,9 @@ def generate_excel_report(request):
         worksheet.cell(row=row_num, column=2).value = order.create_date.strftime('%Y-%m-%d %H:%M')
         worksheet.cell(row=row_num, column=3).value = order.table.Table_number if order.table else 'N/A'
         worksheet.cell(row=row_num, column=4).value = checkout.total_price if checkout else 'N/A'
-        worksheet.cell(row=row_num, column=5).value = checkout.payment_method if checkout else 'N/A'
-        worksheet.cell(row=row_num, column=6).value = checkout.payment_status if checkout else 'N/A'
+        worksheet.cell(row=row_num, column=5).value = checkout.tax_amount if checkout else 'N/A'
+        worksheet.cell(row=row_num, column=6).value = checkout.payment_method if checkout else 'N/A'
+        worksheet.cell(row=row_num, column=7).value = checkout.payment_status if checkout else 'N/A'
 
     # Set the column widths
     for col in worksheet.columns:
@@ -481,7 +591,7 @@ def generate_excel_report(request):
         for cell in col:
             try:
                 if len(str(cell.value)) > max_length:
-                    max_length = len(cell.value)
+                    max_length = len(str(cell.value))
             except:
                 pass
         adjusted_width = (max_length + 2)
@@ -499,17 +609,13 @@ def generate_orders_report(request):
         start_date = request.POST.get('sdate')
         end_date = request.POST.get('edate')
 
-        # Parse the dates
-        # start_date = parse_date(start_date)
-        # end_date = parse_date(end_date)
-
         # Create a new Excel workbook and add a worksheet
         workbook = openpyxl.Workbook()
         worksheet = workbook.active
         worksheet.title = 'Orders Report'
 
         # Define the columns
-        columns = ['Order ID', 'Order Date', 'Table', 'Total Price', 'Payment Method', 'Payment Status']
+        columns = ['Order ID', 'Order Date', 'Table', 'Total Price', 'Tax Amount', 'Payment Method', 'Payment Status']
 
         # Set the header row
         row_num = 1
@@ -529,8 +635,9 @@ def generate_orders_report(request):
             worksheet.cell(row=row_num, column=2).value = order.create_date.strftime('%Y-%m-%d %H:%M')
             worksheet.cell(row=row_num, column=3).value = order.table.Table_number if order.table else 'N/A'
             worksheet.cell(row=row_num, column=4).value = checkout.total_price if checkout else 'N/A'
-            worksheet.cell(row=row_num, column=5).value = checkout.payment_method if checkout else 'N/A'
-            worksheet.cell(row=row_num, column=6).value = checkout.payment_status if checkout else 'N/A'
+            worksheet.cell(row=row_num, column=5).value = checkout.tax_amount if checkout else 'N/A'
+            worksheet.cell(row=row_num, column=6).value = checkout.payment_method if checkout else 'N/A'
+            worksheet.cell(row=row_num, column=7).value = checkout.payment_status if checkout else 'N/A'
 
         # Set the column widths
         for col in worksheet.columns:
@@ -539,7 +646,7 @@ def generate_orders_report(request):
             for cell in col:
                 try:
                     if len(str(cell.value)) > max_length:
-                        max_length = len(cell.value)
+                        max_length = len(str(cell.value))
                 except:
                     pass
             adjusted_width = (max_length + 2)
@@ -550,6 +657,8 @@ def generate_orders_report(request):
         response['Content-Disposition'] = f'attachment; filename=orders_report_{start_date}_to_{end_date}.xlsx'
         workbook.save(response)
         return response
+    
+
 
 
 

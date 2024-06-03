@@ -140,3 +140,7 @@ def SignUp(request):
     return render(request,"register.html",{"form":form})
 
 
+def PermissionDenyed(request):
+    return render(request,"pages-error.html")
+
+

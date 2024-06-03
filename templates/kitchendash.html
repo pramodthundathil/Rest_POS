@@ -1,23 +1,14 @@
 {% extends 'index.html' %}
 {% block content %}
 
-
-
 <div class="content-page">
     <div class="container-fluid">
         <div class="row" id="table-container">
-
-
            {% include 'kitchendashitems.html' %}
-
-          
-
-
-
         </div>
     </div>
 </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -26,16 +17,17 @@
         socket.onmessage = function(event) {
             var data = JSON.parse(event.data);
             if (data.message === "Database updated") {
-                console.log("data updated");
+                console.log("Data updated");
                 // Reload table content using AJAX
                 $.ajax({
                     url: "{% url 'refresh_table' %}",
                     type: "GET",
                     success: function(response) {
+                        console.log("Response received:", response);
                         $('#table-container').html(response.table_html);
                     },
                     error: function(xhr, status, error) {
-                        console.error(error);
+                        console.error("Error:", error);
                     }
                 });
             }
@@ -53,85 +45,54 @@
             console.log("WebSocket connection closed:", event);
         };
     });
-</script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    $(document).ready(function () {
-        $(document).on("click", ".progre", function (){
-            console.log("Progress Click Working....")
-            var orderid = $(this).data("order-item-id");
-
-            $.ajax({
-                url: "{% url 'Status_Change' %}", // URL pattern to add the item to the order
-                type: "POST",
-                data: {
-                    'orderid': orderid,
-                    // Assuming order.id is available in the context
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'
-                },
-                success: function (response) {
-                    // Update the order summary div with the new order items
-                    $("#table-container").html(response.order_html);
-                },
-                error: function (xhr, errmsg, err) {
-                    console.log(xhr.status + ": " + xhr.responseText);
-                }
-            });
-        });
-    });
-
-    $(document).ready(function () {
-        $(document).on("click", ".ready", function (){
-            console.log("Progress Click Working....")
-            var orderid = $(this).data("order-item-id");
-
-            $.ajax({
-                url: "{% url 'Status_Change_Order_Ready' %}", // URL pattern to add the item to the order
-                type: "POST",
-                data: {
-                    'orderid': orderid,
-                     // Assuming order.id is available in the context
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'
-                },
-                success: function (response) {
-                    // Update the order summary div with the new order items
-                    $("#table-container").html(response.order_html);
-                },
-                error: function (xhr, errmsg, err) {
-                    console.log(xhr.status + ": " + xhr.responseText);
-                }
-            });
-        });
-    });
-
-
-    $(document).ready(function () {
-    // Use event delegation to handle dynamic elements
-    $(document).on("click", ".finish", function () {
-        console.log("Progress Click Working....");
-        var menuid = $(this).data("menu-item-id");
-
-        $.ajax({
-            url: "{% url 'Status_Change_Menu_Finish' %}", // URL pattern to add the item to the order
-            type: "POST",
-            data: {
-                'orderid': menuid, // Assuming order.id is available in the context
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function (response) {
-                // Update the order summary div with the new order items
-                $("#table-container").html(response.order_html);
-            },
-            error: function (xhr, errmsg, err) {
-                console.log(xhr.status + ": " + xhr.responseText);
-            }
-        });
-    });
-});
-
-
 
     
+    $(document).ready(function () {
+        function ajaxPost(url, data, onSuccess) {
+            $.ajax({
+                url: url,
+                type: "POST",
+                data: data,
+                success: function (response) {
+                    console.log("Response received:", response);
+                    $("#table-container").html(response.order_html);
+                },
+                error: function (xhr, errmsg, err) {
+                    console.error(xhr.status + ": " + xhr.responseText);
+                }
+            });
+        }
+
+        $(document).on("click", ".progre", function () {
+            console.log("Progress Click Working....");
+            var orderid = $(this).data("order-item-id");
+
+            ajaxPost("{% url 'Status_Change' %}", {
+                'orderid': orderid,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            });
+        });
+
+        $(document).on("click", ".ready", function () {
+            console.log("Ready Click Working....");
+            var orderid = $(this).data("order-item-id");
+
+            ajaxPost("{% url 'Status_Change_Order_Ready' %}", {
+                'orderid': orderid,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            });
+        });
+
+        $(document).on("click", ".finish", function () {
+            console.log("Finish Click Working....");
+            var menuid = $(this).data("menu-item-id");
+
+            ajaxPost("{% url 'Status_Change_Menu_Finish' %}", {
+                'orderid': menuid,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            });
+        });
+    });
 </script>
 
 
