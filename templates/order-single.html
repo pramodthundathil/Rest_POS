@@ -19,140 +19,23 @@
                         <div class="header-title">
                             <h4 class="card-title mb-0">Category</h4>
                         </div>
+                        <form id="product-search-form">
+                            <input type="hidden" id="order_id" name="order_id" value="{{ order.id }}">
+                            <input type="text" id="product_search" name="product_search" class="form-control" placeholder="Search product with code or name">
+                        </form>
 
                     </div>
                 </div>
-                {% for cat in category %}
-                <div class="card card-block card-stretch card-height-helf"
-                    style="box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;" data-toggle="modal"
-                    data-target="#exampleModalScrollable{{cat.id}}">
-                    <div class="card-body">
-                        <div class="d-flex align-items-top justify-content-between">
-                            <div class="">
-                                <h5>{{cat}}</h5>
-                                <p class="mb-0">Items : 98</p>
-                            </div>
-                            <div class="">
-                                <img src="{{cat.image.url}}" style="width:100px" height="100px" alt="">
-                            </div>
-
-                        </div>
-                        <!-- <div id="layout1-chart-3" class="layout-chart-1"></div> -->
-                    </div>
+                <div id="cat">
+                {% include 'order-category-dash.html' %}
                 </div>
-
-                <!-- Modal -->
-                <div class="modal fade" id="exampleModalScrollable{{cat.id}}" tabindex="-1" role="dialog"
-                    aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="exampleModalScrollableTitle">{{cat}}</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="row">
-                                    {% for m in menu %}
-                                    {% if m.category == cat %}
-                                    {% if m.diet == 'Veg' %}
-
-                                    <div class="col-lg-4 mt-3">
-                                        <div class="card  card-block card-stretch card-height-helf"
-                                            style="box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;border-left: 7px solid green ;"
-                                            data-toggle="modal" data-target="#exampleModalScrollable{{cat.id}}"
-                                            data-menu-item-id="{{m.id}}" id="val">
-                                            <div class="card-body" id="val">
-                                                <div class="d-flex align-items-top justify-content-between">
-                                                    <div class="">
-                                                        <h5>{{m.name}}</h5>
-                                                        <p class="mb-0">Price: {{m.price}}</p>
-                                                        <p class="mb-0">Stock: {{m.stock}}</p>
-                                                        <span class="text-info">Potion: {{m.potion}}</span>
-                                                    </div>
-                                                    <div class="">
-                                                        <img src="{{m.image.url}}" style="width:100px" height="120px"
-                                                            alt="">
-                                                    </div>
-
-                                                </div>
-                                                <!-- <div id="layout1-chart-3" class="layout-chart-1"></div> -->
-                                            </div>
-                                            </a>
-                                        </div>
-                                    </div>
-
-                                    {% elif m.diet == 'Non-Veg' %}
-                                    <div class="col-lg-4 mt-3">
-                                        <div class="card card-block card-stretch card-height-helf"
-                                            style="box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;border-left: 7px solid red ;"
-                                            data-toggle="modal" data-target="#exampleModalScrollable{{cat.id}}"
-                                            data-menu-item-id="{{m.id}}" id="val">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-top justify-content-between">
-                                                    <div class="">
-                                                        <h5>{{m.name}}</h5>
-                                                        <p class="mb-0">Price: {{m.price}}</p>
-                                                        <p class="mb-0">Stock: {{m.stock}}</p>
-                                                        <span class="text-info">Potion: {{m.potion}}</span>
-
-                                                    </div>
-                                                    <div class="">
-                                                        <img src="{{m.image.url}}" style="width:100px" height="120px"
-                                                            alt="">
-                                                    </div>
-
-                                                </div>
-                                                <!-- <div id="layout1-chart-3" class="layout-chart-1"></div> -->
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% elif m.diet == 'Egg' %}
-                                    <div class="col-lg-4 mt-3">
-                                        <div class="card card-block card-stretch card-height-helf"
-                                            style="box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;border-left: 7px solid yellow ;"
-                                            data-toggle="modal" data-target="#exampleModalScrollable{{cat.id}}"
-                                            data-menu-item-id="{{m.id}}" id="val">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-top justify-content-between">
-                                                    <div class="">
-                                                        <h5>{{m.name}}</h5>
-                                                        <p class="mb-0">Price: {{m.price}}</p>
-                                                        <p class="mb-0">Stock: {{m.stock}}</p>
-                                                        <span class="text-info">Potion: {{m.potion}}</span>
-
-                                                    </div>
-                                                    <div class="">
-                                                        <img src="{{m.image.url}}" style="width:100px" height="120px"
-                                                            alt="">
-                                                    </div>
-
-                                                </div>
-                                                <!-- <div id="layout1-chart-3" class="layout-chart-1"></div> -->
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endif %}
-                                    {% endif %}
-
-                                    {% endfor %}
-                                </div>
-
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
 
             </div>
 
             <div class="col-lg-8">
-                <div class="card card-block card-stretch card-height" id="order-summary">
+                <div class="card-block card-stretch card-height" id="order-summary">
                     {% include 'order-summery.html' %}
+                    
                    
                 </div>
            
@@ -163,31 +46,7 @@
         </div>
     </div>
 </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    $(document).ready(function () {
-        $(".card").on("click", function () {
-            var menuItemId = $(this).data("menu-item-id");
 
-            $.ajax({
-                url: "{% url 'add_to_order' %}", // URL pattern to add the item to the order
-                type: "POST",
-                data: {
-                    'menu_item_id': menuItemId,
-                    'order_id': "{{ order.id }}", // Assuming order.id is available in the context
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'
-                },
-                success: function (response) {
-                    // Update the order summary div with the new order items
-                    $("#order-summary").html(response.order_html);
-                },
-                error: function (xhr, errmsg, err) {
-                    console.log(xhr.status + ": " + xhr.responseText);
-                }
-            });
-        });
-    });
-</script>
 
 <!-- <script>
     $(document).ready(function() {
@@ -272,5 +131,31 @@
     });
 
 </script>
+
+<script>
+    $(document).ready(function () {
+        $("#product_search").on("input", function () {
+            var query = $(this).val();
+            var orderId = $("#order_id").val();
+
+            $.ajax({
+                url: "{% url 'search_menu' %}",
+                type: "GET",
+                data: {
+                    'product_search': query,
+                    'order_id': orderId
+                },
+                success: function (response) {
+                    $("#cat").html(response);
+                },
+                error: function (xhr, errmsg, err) {
+                    console.log(xhr.status + ": " + xhr.responseText);
+                }
+            });
+        });
+    });
+</script>
+
+
 
 {% endblock %}

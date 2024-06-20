@@ -85,6 +85,7 @@
                 <td>
                     <img src="{{i.menu_item.image.url}}" id="menuimage" style="width:60px;height: 60px;" alt="">
                     {{i.menu_item.name}}
+                    <span style="font-size: x-small; color: gary;">(Add: Extra Gravy )</span>
                 </td>
                 <td>
                    DHS {{i.menu_item.price}}
@@ -96,7 +97,7 @@
                 </td>
                 <td>
                     {{i.get_total_price}}
-                    <button class="badge bg-warning mr-2" data-toggle="modal"
+                                                <button class="badge bg-warning mr-2" data-toggle="modal"
                                                 data-target="#deletemodel" data-original-title="Delete" href="#"><i
                                                     class="ri-delete-bin-line mr-0"></i></button>
                                             <!-- Delete Modal -->
@@ -117,6 +118,36 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            <button class="btn btn-sm btn-secondary" data-toggle="modal" data-target="#exampleModalScrollable12">Add Extra</button>
+
+                                             <!-- Modal -->
+                     <div class="modal fade" id="exampleModalScrollable12" tabindex="-1" role="dialog" aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-scrollable" role="document">
+                           <div class="modal-content">
+                              <div class="modal-header">
+                                 <h5 class="modal-title" id="exampleModalScrollableTitle">Add Extras</h5>
+                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                 <span aria-hidden="true">&times;</span>
+                                 </button>
+                              </div>
+                              <div class="modal-body">
+                                {% for add in addons %}
+                                <form >
+                                    <input type="checkbox" name="{{add.id}}" class="">
+                                    <label class="custom-control-label">{{add.name}} price: {{add.price}}</label>
+                                </form>
+                               
+                                 {% endfor %}
+                                 
+                              </div>
+                              <div class="modal-footer">
+                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                 <button type="button" class="btn btn-primary">Save changes</button>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+
                 </td>
             </tr>
             {% endfor %}
@@ -129,8 +160,32 @@
 </div>
 <div class="d-flex flex-wrap justify-content-end align-items-center mb-3 p-3">
     <div class="buttons p-3"><a href="javascript:void(0);" onclick="printReceipt('{{ order.id }}')" class="btn btn-info">Print Bill</a></div>
-    <div class="buttons p-3"><a href="{%url 'TakeOrder' order.id  %}" class="btn btn-warning">Place Order</a></div>
-    <div class="buttons p-3"><a href="" class="btn btn-success">Settle Bill</a></div>
+    <div class="buttons p-3"><a href="javascript:void(0);" id="place-order-btn-1" class="btn btn-warning">Place Order</a></div>
+    <!-- <div class="buttons p-3"><a href="" class="btn btn-success">Settle Bill</a></div> -->
+</div>
+
+
+<!-- Existing HTML and CSS code -->
+
+<!-- Vehicle Number Modal -->
+<div class="modal fade" id="vehicleNumberModal" tabindex="-1" role="dialog" aria-labelledby="vehicleNumberModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="vehicleNumberModalLabel">Enter Vehicle Number</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="vehicleNumberInput" class="form-control" placeholder="Enter vehicle number">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="submitVehicleNumber">Submit</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -140,4 +195,62 @@
             printWindow.print();
         };
     }
+</script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        // Event listener for Place Order button
+        $("#place-order-btn-1").on("click", function () {
+            var tableNumber = "{{ order.table.Table_number }}"; // Ensure table number is available in the order object
+
+            if (tableNumber == 100) {
+                $('#vehicleNumberModal').modal('show');
+            } else {
+                takeOrder();
+            }
+        });
+
+        // Event listener for Vehicle Number submit button
+        $("#submitVehicleNumber").on("click", function () {
+            var vehicleNumber = $("#vehicleNumberInput").val();
+            if (vehicleNumber) {
+                takeOrder(vehicleNumber);
+                $('#vehicleNumberModal').modal('hide');
+            } else {
+                alert("Please enter the vehicle number.");
+            }
+        });
+
+        // AJAX request to place the order
+        function takeOrder(vehicleNumber = null) {
+            var data = {
+                'order_id': "{{ order.id }}",
+                
+            };
+            if (vehicleNumber) {
+                data['vehicle_number'] = vehicleNumber;
+            }
+
+            console.log("Sending AJAX request with data:", data); // Debugging information
+
+            $.ajax({
+                url: "{% url 'TakeOrder' order.id %}",
+                type: "POST",
+                data: data,
+                success: function (response) {
+                    
+                    window.location.href = "{%url 'Pos'%}";
+                    // alert("Order placed successfully!");
+                    console.log("Order placed successfully:", response);
+                     // Debugging information
+                },
+                error: function (xhr, errmsg, err) {
+                    console.error("Error placing order:", xhr.status, xhr.responseText); // Debugging information
+                }
+            });
+        }
+    });
 </script>

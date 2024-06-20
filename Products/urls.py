@@ -10,10 +10,16 @@ urlpatterns = [
     path("Add_Product",views.Add_Product,name="Add_Product"),
     path("List_Product",views.List_Product,name="List_Product"),
     path("DeleteProduct/<int:pk>",views.DeleteProduct,name="DeleteProduct"),
+    path("EditProduct/<int:pk>",views.EditProduct, name = "EditProduct"),
+    path("list_add_ons",views.list_add_ons, name = "list_add_ons"),
+    path("add_add_ons",views.add_add_ons, name = "add_add_ons"),
+
     path("Pos",views.Pos,name="Pos"),
     path("Add_Table",views.Add_Table,name="Add_Table"),
     path("List_Table",views.List_Table,name="List_Table"),
     path("Delete_Table/<int:pk>",views.Delete_Table,name="Delete_Table"),
+
+
     path("CreateOrder",views.CreateOrder,name="CreateOrder"),
     path("OrderSingle/<int:pk>",views.OrderSingle,name="OrderSingle"),
     path("add_to_order",views.add_to_order,name="add_to_order"),
@@ -22,6 +28,9 @@ urlpatterns = [
     path("Delete_menuitem/<int:pk>",views.Delete_menuitem,name="Delete_menuitem"),
     path("TakeOrder/<int:pk>",views.TakeOrder,name="TakeOrder"),
     path('receipt/<int:order_id>/', views.receipt_view, name='receipt'),
+    path("add_items_to_order/<int:pk>/<int:id>",views.add_items_to_order,name="add_items_to_order"),
+
+
     path('KitchenDashboard', views.KitchenDashboard, name='KitchenDashboard'),
     path('refresh_table', views.refresh_table, name='refresh_table'),
     path('refresh_order', views.refresh_order, name='refresh_order'),
@@ -31,6 +40,9 @@ urlpatterns = [
     path('Status_Change_Menu_Finish', views.Status_Change_Menu_Finish, name='Status_Change_Menu_Finish'),
     path('SettleOrder/<int:pk>', views.SettleOrder, name='SettleOrder'),
     path('ViewCheckouts', views.ViewCheckouts, name='ViewCheckouts'),
+    path('search-menu/', views.search_menu, name='search_menu'),
+
+
     path('Reports', views.Reports, name='Reports'),
     path('generate_excel_report', views.generate_excel_report, name='generate_excel_report'),
     path('generate_orders_report', views.generate_orders_report, name='generate_orders_report'),

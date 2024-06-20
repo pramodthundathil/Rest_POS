@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import FoodCategory, Menu, Tables, Order, OrderItem, Checkout, Tax
+from .models import *
 from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger 
 from django.http import JsonResponse
@@ -9,6 +9,7 @@ from django.template.loader import render_to_string
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from Home.decorators import admin_only, allowed_users
+from django.views.decorators.csrf import csrf_exempt
 
 # Create your views here.
 
@@ -70,9 +71,11 @@ def Add_Product(request):
     food_category = FoodCategory.objects.all()
     tax = Tax.objects.all()
     description = " "
+    code  = " "
     if request.method == "POST":
         name = request.POST['name']
         category = FoodCategory.objects.get(id = int(request.POST['category']))
+        code = request.POST['code']
         potion = request.POST['potion']
         diet = request.POST['diet']
         price = request.POST['price']
@@ -81,23 +84,29 @@ def Add_Product(request):
         description = request.POST['description']
         tax_name = request.POST["tax_name"]
         tax_value = request.POST["tax_value"]
+        
+        if Menu.objects.filter(code = code).exists():
+            messages.info(request, 'Menu Item with same code is already exists...')
+            return redirect("Add_Product")
+        else:
 
-        menu = Menu.objects.create(
-            name = name, 
-            category = category, 
-            image = image, 
-            potion = potion, 
-            diet =diet, 
-            price = price, 
-            stock = stock, 
-            description = description,
-            tax = tax_name,
-            tax_value = Tax.objects.get(id = int(tax_value))
+            menu = Menu.objects.create(
+                name = name, 
+                category = category, 
+                image = image, 
+                code  = code,
+                potion = potion, 
+                diet =diet, 
+                price = price, 
+                stock = stock, 
+                description = description,
+                tax = tax_name,
+                tax_value = Tax.objects.get(id = int(tax_value))
 
-            )
-        menu.save()
-        messages.success(request,"Menu Item added Success...")
-        return redirect("List_Product")
+                )
+            menu.save()
+            messages.success(request,"Menu Item added Success...")
+            return redirect("List_Product")
     
     context = {
         "food_category":food_category,
@@ -113,6 +122,13 @@ def List_Product(request):
         "menu":menu,
     }
     return render(request,'list-product.html',context)
+
+def EditProduct(request,pk):
+    menu = Menu.objects.get(id = pk)
+    context = {
+        "menu":menu,
+    }
+    return render(request,"edit-product.html",context)
 
 def DeleteProduct(request,pk):
     menu  = Menu.objects.get(id = pk)
@@ -211,7 +227,8 @@ def OrderSingle(request,pk):
     menu = Menu.objects.filter(status = True)
     order = Order.objects.get(id = pk)
     item = OrderItem.objects.filter(order = order)
-    total_price = sum(item.get_total_price() for item in order.items.all())
+    total_price = round(sum(item.get_total_price() for item in order.items.all()),2)
+    addons = AddOns.objects.all()
     
 
 
@@ -220,9 +237,29 @@ def OrderSingle(request,pk):
         "menu":menu,
         "order":order,
         "item":item,
-        "total_price":round(total_price,2)
+        "total_price":round(total_price,2),
+        "addons":addons
     }
     return render(request,"order-single.html",context)
+
+
+def search_menu(request):
+    query = request.GET.get('product_search', '')
+    menu = Menu.objects.filter(status = True)
+    order_id = request.GET.get('order_id', '')
+
+    category = FoodCategory.objects.all()
+    order = Order.objects.get(id = int(order_id))
+    addons = AddOns.objects.all()
+
+
+
+    if query:
+        results = Menu.objects.filter(name__icontains=query) | Menu.objects.filter(code__icontains=query)
+    else:
+        results = Menu.objects.none()
+    
+    return render(request, 'search_results.html', {'results': results,"category":category,"menu":menu,"order":order,})
 
 def CreateOrder(request):
     if request.method == "POST":
@@ -254,6 +291,10 @@ def add_to_order(request):
 
         return JsonResponse({'order_html': order_html})
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+def add_items_to_order(request,pk,id):
+    return redirect('OrderSingle',pk = id)
 
 def increase_quantity(request):
     if request.method == "POST":
@@ -291,7 +332,7 @@ def Delete_menuitem(request,pk):
     item.delete()
     return redirect("OrderSingle",pk = order)
 
-
+@csrf_exempt
 def TakeOrder(request,pk):
     order = Order.objects.get(id =pk)
     order.take_order = True
@@ -657,6 +698,29 @@ def generate_orders_report(request):
         response['Content-Disposition'] = f'attachment; filename=orders_report_{start_date}_to_{end_date}.xlsx'
         workbook.save(response)
         return response
+    
+
+# extra add on for food menu 
+
+
+def list_add_ons(request):
+    menu = AddOns.objects.all()
+    context = {
+        "menu":menu
+    }
+    return render(request,"list-addons.html",context)
+
+
+def add_add_ons(request):
+    if request.method == "POST":
+        name = request.POST.get('name')
+        price = request.POST.get('price')
+        addons = AddOns.objects.create(name = name, price = price)
+        addons.save()
+        messages.info(request,"Item Added.........")
+        return redirect("list_add_ons")
+
+    return render(request,"add-addons.html")
     
 
 

@@ -25,10 +25,10 @@
                     <a href="{%url 'OrderSingle' order.order.id %}" class="btn btn-outline-primary btn-sm mt-3">View</a>
                     <br>
                     {% if order.order.take_order == True %}
-                    <h6 class="badge bg-warning">Order In Kitchen</h6>
+                    <h6 class="badge bg-warning">In Kitchen</h6>
                     {% endif %}
                     {% if order.order.completion_status == True %}
-                    <h6 class="badge bg-success">Order Completed</h6>
+                    <h6 class="badge bg-success">Completed</h6>
                     {% endif %}
                 </div>
             </div>

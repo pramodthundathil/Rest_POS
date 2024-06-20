@@ -8,6 +8,12 @@ class Tax(models.Model):
 
     def __str__(self):
         return '{}  {} %'.format(str(self.tax_name),(self.tax_percentage))
+    
+class AddOns(models.Model):
+    name = models.CharField(max_length=255)
+    price = models.FloatField(default=0)
+    status = models.BooleanField(default=True)
+
 
 
 class FoodCategory(models.Model):
@@ -33,6 +39,9 @@ class Menu(models.Model):
     stock = models.IntegerField()
     description = models.CharField(max_length=1000, null=True, blank=True)
     create_date = models.DateField(auto_now_add=True)
+    # Code of product for searching
+
+    code = models.CharField(max_length=10, null=True, unique=True)
 
     # Additional fields
     price_Before_tax = models.FloatField(null=True, blank=True)

@@ -1,0 +1,25 @@
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $(".card").on("click", function () {
+            var menuItemId = $(this).data("menu-item-id");
+
+            $.ajax({
+                url: "{% url 'add_to_order' %}", // URL pattern to add the item to the order
+                type: "POST",
+                data: {
+                    'menu_item_id': menuItemId,
+                    'order_id': "{{ order.id }}", // Assuming order.id is available in the context
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    // Update the order summary div with the new order items
+                    $("#order-summary").html(response.order_html);
+                },
+                error: function (xhr, errmsg, err) {
+                    console.log(xhr.status + ": " + xhr.responseText);
+                }
+            });
+        });
+    });
+</script>

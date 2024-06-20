@@ -1,6 +1,6 @@
 
 {% for item in order_details %}
-<div class="col-lg-4">
+<div class="col-lg-6">
     <div class="card card-block card-stretch card-height-helf"
         style="box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;box-sizing: border-box !important;" data-toggle="modal"
         data-target="#exampleModalScrollable{{cat.id}}">
@@ -42,7 +42,7 @@
                                         <button data-order-item-id="{{item.order.id}}" class="btn btn-dark ready">Order Ready</button>
                                     </div>
                                     <div class="col-6 mt-2">
-                                        <a href="{%url 'Status_Change_OrderCompeletion' item.order.id %}"  class="btn btn-success competion">completed Order</a>
+                                        <a href="{%url 'Status_Change_OrderCompeletion' item.order.id %}"  class="btn btn-success competion">Completed</a>
                                     </div>
                                     <div class="col-6 mt-2">
                                         <a href="javascript:void(0);" onclick="printReceipt('{{ item.order.id }}')" class="btn btn-warning">Print Reciept</a>

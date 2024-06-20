@@ -54,6 +54,19 @@
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
+                                            <label>Product Code</label>
+                                            <input type="text" class="form-control" placeholder="Product Code" data-errors="Please Enter code." name="code" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Image</label>
+                                            <input type="file" class="form-control image-file" name="pic"
+                                                accept="image/*">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
                                             <label>Portion *</label>
                                             <select name="potion" required class="selectpicker form-control" data-style="py-0">
                                                 <option selected disabled>Select Portion Of Food</option>
@@ -91,7 +104,7 @@
                                             <div class="help-block with-errors"></div>
                                         </div>
                                     </div>
-                                    <div class="col-md-12">
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Tax Method *</label>
                                             <select name="tax_name" class="selectpicker form-control" required data-style="py-0">
@@ -100,7 +113,7 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-md-12">
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Tax Value <small>(in Percentage %)</small> *</label>
                                             <select name="tax_value" required class="selectpicker form-control" data-style="py-0">
@@ -120,13 +133,7 @@
                                             </select>
                                         </div>
                                     </div> -->
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label>Image</label>
-                                            <input type="file" class="form-control image-file" name="pic"
-                                                accept="image/*">
-                                        </div>
-                                    </div>
+                                  
                                     <div class="col-md-12">
                                         <div class="form-group">
                                             <label>Description / Product Details</label>
