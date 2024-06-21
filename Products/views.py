@@ -259,7 +259,7 @@ def search_menu(request):
     else:
         results = Menu.objects.none()
     
-    return render(request, 'search_results.html', {'results': results,"category":category,"menu":menu,"order":order,})
+    return render(request, 'search_results.html', {'results': results,"category":category,"menu":menu,"order":order,"addons":addons})
 
 def CreateOrder(request):
     if request.method == "POST":
@@ -277,6 +277,8 @@ def add_to_order(request):
         order_id = request.POST.get('order_id')
         menu_item = get_object_or_404(Menu, id=menu_item_id)
         order = get_object_or_404(Order, id=order_id)
+        addons = AddOns.objects.all()
+
 
         # Create or update the OrderItem
         order_item, created = OrderItem.objects.get_or_create(order=order, menu_item=menu_item, defaults={'price': menu_item.price})
@@ -287,11 +289,35 @@ def add_to_order(request):
         # Render the updated order items and return as HTML
         item = OrderItem.objects.filter(order = order)
         total_price = sum(item.get_total_price() for item in order.items.all())
-        order_html = render_to_string('order-summery.html', {'order': order,"item":item,"total_price":total_price})
+        order_html = render_to_string('order-summery.html', {'order': order,"item":item,"total_price":total_price,"addons":addons})
 
         return JsonResponse({'order_html': order_html})
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+@csrf_exempt
+def add_on_to_item(request,pk,id):
+    if request.method == "POST":
+        order_item = OrderItem.objects.get(id = pk)  # Assuming a function to get the current order
+
+        special_instructions = request.POST.get('instraction', '')
+        addon_ids = request.POST.getlist('addons')
+        print(addon_ids,"---------------------")
+        try:
+            addon_ids = [int(addon_id) for addon_id in addon_ids]
+        except ValueError:
+            print("Invalid add-on IDs provided.")
+            messages.error(request, "Invalid add-ons selected.")
+            return redirect('OrderSingle', pk=id)
+
+        addons = AddOns.objects.filter(id__in=addon_ids)
+        print("Addons queryset:", addons)
+
+        order_item.add_ons.set(addons)
+        order_item.special_instructions = special_instructions
+        order_item.save()
+        messages.info(request,"Add on added ")
+
+    return redirect('OrderSingle',pk = id)
 
 def add_items_to_order(request,pk,id):
     return redirect('OrderSingle',pk = id)

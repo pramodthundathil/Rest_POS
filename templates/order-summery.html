@@ -85,7 +85,12 @@
                 <td>
                     <img src="{{i.menu_item.image.url}}" id="menuimage" style="width:60px;height: 60px;" alt="">
                     {{i.menu_item.name}}
-                    <span style="font-size: x-small; color: gary;">(Add: Extra Gravy )</span>
+                    <span style="font-size: x-small; color: gary;">(Add: {{i.special_instructions}}
+                        {% for x in i.add_ons.all %}
+                            {{ x.name }}, 
+                        {% endfor %}
+                        )
+                        </span>
                 </td>
                 <td>
                    DHS {{i.menu_item.price}}
@@ -118,35 +123,38 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <button class="btn btn-sm btn-secondary" data-toggle="modal" data-target="#exampleModalScrollable12">Add Extra</button>
+                                            <button class="btn btn-sm btn-secondary" data-toggle="modal" data-target="#exampleModalScrollable{{i.id}}">Add Extra</button>
 
-                                             <!-- Modal -->
-                     <div class="modal fade" id="exampleModalScrollable12" tabindex="-1" role="dialog" aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-scrollable" role="document">
-                           <div class="modal-content">
-                              <div class="modal-header">
-                                 <h5 class="modal-title" id="exampleModalScrollableTitle">Add Extras</h5>
-                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                 <span aria-hidden="true">&times;</span>
-                                 </button>
-                              </div>
-                              <div class="modal-body">
-                                {% for add in addons %}
-                                <form >
-                                    <input type="checkbox" name="{{add.id}}" class="">
-                                    <label class="custom-control-label">{{add.name}} price: {{add.price}}</label>
-                                </form>
-                               
-                                 {% endfor %}
-                                 
-                              </div>
-                              <div class="modal-footer">
-                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                 <button type="button" class="btn btn-primary">Save changes</button>
-                              </div>
-                           </div>
-                        </div>
-                     </div>
+                                           <!-- Add Extra Modal -->
+<div class="modal fade" id="exampleModalScrollable{{i.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalScrollableTitle">Add Extras</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addExtrasForm{{i.id}}" action="{% url 'add_on_to_item' i.id order.id %}" method="post">
+                    
+                    {% for add in addons %}
+                        <input type="checkbox" name="addons" value="{{add.id}}" class="">
+                        <label class="">{{add.name}} price: {{add.price}}</label><br>
+                    {% endfor %}
+                    <br><br>
+                    <label for="">Special Instructions:</label>
+                    <input type="text" class="form-control" placeholder="Special Instructions" name="instraction">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="submitAddExtrasForm('{{i.id}}')">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
                 </td>
             </tr>
@@ -199,7 +207,6 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
 <script>
     $(document).ready(function () {
         // Event listener for Place Order button
@@ -254,3 +261,28 @@
         }
     });
 </script>
+<script>
+    function submitAddExtrasForm(itemId) {
+        var form = document.getElementById('addExtrasForm' + itemId);
+        var formData = new FormData(form);
+        
+        $.ajax({
+            url: form.action,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                // Handle success, e.g., close modal, show success message, update the page dynamically
+                console.log('Form submitted successfully:', response);
+                $('#exampleModalScrollable' + itemId).modal('hide');
+                location.reload(); // Reload the page to reflect changes, or update the DOM dynamically
+            },
+            error: function(xhr, errmsg, err) {
+                // Handle error
+                console.error('Error submitting form:', xhr.status, xhr.responseText);
+            }
+        });
+    }
+</script>
+

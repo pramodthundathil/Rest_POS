@@ -108,6 +108,7 @@ class OrderItem(models.Model):
     quantity = models.IntegerField(default=1)
     price = models.FloatField()
     special_instructions = models.CharField(max_length=500, null=True, blank=True)
+    add_ons = models.ManyToManyField(AddOns,null=True, blank=True)
     completion_status = models.BooleanField(default=False) 
 
     def __str__(self):

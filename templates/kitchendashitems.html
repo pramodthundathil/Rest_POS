@@ -19,7 +19,15 @@
                         {% for i in item.orderitem %}
                         <tr>
                             <th>{{i.menu_item.name}} <br>
-                            <span class="text-sm">(Portion: {{i.menu_item.potion}})</span></th>
+                            <span class="text-sm">(Portion: {{i.menu_item.potion}})</span><br>
+                            <span style="font-size: x-small; color: gary;">(Add: {{i.special_instructions}}
+                                {% for x in i.add_ons.all %}
+                                    {{ x.name }}, 
+                                {% endfor %}
+                                )
+                                </span>
+                        
+                        </th>
                             <th>{{i.quantity}}</th>
                             <td>
                                 {% if i.menu_item.completion_status == True %}

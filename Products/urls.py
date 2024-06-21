@@ -29,6 +29,7 @@ urlpatterns = [
     path("TakeOrder/<int:pk>",views.TakeOrder,name="TakeOrder"),
     path('receipt/<int:order_id>/', views.receipt_view, name='receipt'),
     path("add_items_to_order/<int:pk>/<int:id>",views.add_items_to_order,name="add_items_to_order"),
+    path("add_on_to_item/<int:pk>/<int:id>",views.add_on_to_item,name="add_on_to_item"),
 
 
     path('KitchenDashboard', views.KitchenDashboard, name='KitchenDashboard'),
