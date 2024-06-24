@@ -14,7 +14,7 @@ from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 
-
+@login_required(login_url='SignIn')
 def Add_Category(request):
     if request.method == "POST":
         pic = request.FILES['pic']
@@ -26,6 +26,7 @@ def Add_Category(request):
     
     return render(request,'add-category.html')
 
+@login_required(login_url='SignIn')
 def List_Category(request):
     food_category = FoodCategory.objects.all()
     p = Paginator(food_category, 20)
@@ -43,12 +44,14 @@ def List_Category(request):
     }
     return render(request,'list-category.html',context)
 
+@login_required(login_url='SignIn')
 def DeleteCategory(request,pk):
     FoodCategory.objects.get(id = pk).delete()
     messages.success(request,'Food Category Deleted')
     return redirect('List_Category')
 
 
+@login_required(login_url='SignIn')
 def AddTax(request):
     if request.method == "POST":
         name = request.POST.get('name')
@@ -59,6 +62,7 @@ def AddTax(request):
         return redirect("ListTax")
     return render(request,"add-tax-slab.html")
 
+@login_required(login_url='SignIn')
 def ListTax(request):
     tax = Tax.objects.all()
 
@@ -68,6 +72,7 @@ def ListTax(request):
     return render(request,"list-tax.html",context)
 
 
+@login_required(login_url='SignIn')
 def Add_Product(request):
     food_category = FoodCategory.objects.all()
     tax = Tax.objects.all()
@@ -116,6 +121,7 @@ def Add_Product(request):
     }
     return render(request,'add-product.html',context)
 
+@login_required(login_url='SignIn')
 def List_Product(request):
     menu = Menu.objects.all()
 
@@ -124,6 +130,7 @@ def List_Product(request):
     }
     return render(request,'list-product.html',context)
 
+@login_required(login_url='SignIn')
 def EditProduct(request,pk):
     menu = Menu.objects.get(id = pk)
     context = {
@@ -131,6 +138,7 @@ def EditProduct(request,pk):
     }
     return render(request,"edit-product.html",context)
 
+@login_required(login_url='SignIn')
 def DeleteProduct(request,pk):
     menu  = Menu.objects.get(id = pk)
     if menu.status == False:
@@ -142,6 +150,7 @@ def DeleteProduct(request,pk):
     return redirect("List_Product")
 
 
+@login_required(login_url='SignIn')
 def Add_Table(request):
     if request.method == "POST":
         tnum = request.POST['tnum']
@@ -157,6 +166,7 @@ def Add_Table(request):
 
     return render(request,"add-table.html")
 
+@login_required(login_url='SignIn')
 def List_Table(request):
     table = Tables.objects.all()
     context = {
@@ -164,6 +174,7 @@ def List_Table(request):
     }
     return render(request,"list-table.html",context)
 
+@login_required(login_url='SignIn')
 def Delete_Table(request,pk):
     Tables.objects.get(id = pk).delete()
     messages.success(request,"Table deleted success....")
@@ -195,6 +206,7 @@ def Pos(request):
     }
     return render(request,'posinterface.html',context)
 
+@login_required(login_url='SignIn')
 @admin_only
 def PosIndex(request):
     category = FoodCategory.objects.filter()
@@ -223,6 +235,7 @@ def PosIndex(request):
     }
     return render(request,'posinterface.html',context)
 
+@login_required(login_url='SignIn')
 def OrderSingle(request,pk):
     category = FoodCategory.objects.all()
     menu = Menu.objects.filter(status = True)
@@ -244,6 +257,7 @@ def OrderSingle(request,pk):
     return render(request,"order-single.html",context)
 
 
+@login_required(login_url='SignIn')
 def search_menu(request):
     query = request.GET.get('product_search', '')
     menu = Menu.objects.filter(status = True)
@@ -262,6 +276,7 @@ def search_menu(request):
     
     return render(request, 'search_results.html', {'results': results,"category":category,"menu":menu,"order":order,"addons":addons})
 
+@login_required(login_url='SignIn')
 def CreateOrder(request):
     if request.method == "POST":
         table = Tables.objects.get(id = int(request.POST['table']))
@@ -272,6 +287,7 @@ def CreateOrder(request):
     
 
 
+@login_required(login_url='SignIn')
 def add_to_order(request):
     if request.method == "POST":
         menu_item_id = request.POST.get('menu_item_id')
@@ -295,6 +311,7 @@ def add_to_order(request):
         return JsonResponse({'order_html': order_html})
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+@login_required(login_url='SignIn')
 @csrf_exempt
 def add_on_to_item(request,pk,id):
     if request.method == "POST":
@@ -320,9 +337,11 @@ def add_on_to_item(request,pk,id):
 
     return redirect('OrderSingle',pk = id)
 
+@login_required(login_url='SignIn')
 def add_items_to_order(request,pk,id):
     return redirect('OrderSingle',pk = id)
 
+@login_required(login_url='SignIn')
 def increase_quantity(request):
     if request.method == "POST":
         item_id = request.POST.get('item_id')
@@ -337,6 +356,7 @@ def increase_quantity(request):
         return JsonResponse({'order_html': order_html})
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+@login_required(login_url='SignIn')
 def decrease_quantity(request):
     if request.method == "POST":
         item_id = request.POST.get('item_id')
@@ -353,12 +373,14 @@ def decrease_quantity(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
+@login_required(login_url='SignIn')
 def Delete_menuitem(request,pk):
     item = OrderItem.objects.get(id = pk)
     order = item.order.id
     item.delete()
     return redirect("OrderSingle",pk = order)
 
+@login_required(login_url='SignIn')
 @csrf_exempt
 def TakeOrder(request,pk):
     order = Order.objects.get(id =pk)
@@ -378,6 +400,7 @@ def TakeOrder(request,pk):
     return redirect("Pos")
 
 
+@login_required(login_url='SignIn')
 def receipt_view(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     items = order.items.all()
@@ -390,6 +413,7 @@ def receipt_view(request, order_id):
     return render(request, 'receipt.html', context)
 
 
+@login_required(login_url='SignIn')
 def KitchenDashboard(request):
     orders = Order.objects.filter( take_order= True, completion_status = False )
     order_details = []
