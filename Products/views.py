@@ -10,6 +10,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from Home.decorators import admin_only, allowed_users
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 
@@ -168,7 +169,7 @@ def Delete_Table(request,pk):
     messages.success(request,"Table deleted success....")
     return redirect("List_Table")
 
-
+@login_required(login_url='SignIn')
 def Pos(request):
     category = FoodCategory.objects.all()
     menu = Menu.objects.filter(status = True)
