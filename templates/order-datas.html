@@ -7,7 +7,8 @@
         <div class="card-body">
             <div class="d-flex align-items-top justify-content-between row">
                 <div class="col-8">
-                    <h5><span style="font-size: small;">Order: &nbsp;&nbsp;&nbsp;</span>{{order.order}}</h5>
+                    <h6><span style="font-size: small;">Order: &nbsp;&nbsp;&nbsp;</span>{{order.order}}</h6>
+                    <h6>Car: {{order.order.vehicle_number}}</h6>
                     <p class="mb-0">Total Amount: {{order.total_price}}</p>
                     <p class="mb-0">Total Items: {{order.total_items}}</p>
                     <p>Status: <span class="badge bg-info">{{order.order.status}}</span></p>
@@ -20,7 +21,7 @@
                     <h6 class="text-danger">User: {{order.order.user}}</h6>
                     {% endif %}
                     
-                    <h3 class="text-center">{{order.order.table}}</h3>
+                    <h5 class="text-center">{{order.order.table}}</h5>
                     <h6><span style="font-size: small;">Time: </span>{{order.order.create_date|time:"H:i"}}</h6>
                     <a href="{%url 'OrderSingle' order.order.id %}" class="btn btn-outline-primary btn-sm mt-3">View</a>
                     <br>

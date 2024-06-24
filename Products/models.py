@@ -96,6 +96,7 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=status_options, default="Pending")
     checkout_status = models.BooleanField(default=False)
     take_order = models.BooleanField(default=False)
+    vehicle_number = models.CharField(max_length=20, null=True, blank=True)
     completion_status = models.BooleanField(default=False)
 
     def __str__(self):

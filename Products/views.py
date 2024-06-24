@@ -382,22 +382,27 @@ def Delete_menuitem(request,pk):
 
 @login_required(login_url='SignIn')
 @csrf_exempt
-def TakeOrder(request,pk):
-    order = Order.objects.get(id =pk)
-    order.take_order = True
-    order.completion_status = False
-    order.save()
-    posted_data = order 
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        "updates",
-        {
-            "type": "send_update",
-            "message": "Database updated",
-            
-        }
-    )
-    return redirect("Pos")
+def TakeOrder(request, pk):
+    order = get_object_or_404(Order, id=pk)
+    if request.method == "POST":
+        vehicle_number = request.POST.get('vehicle_number', " ")
+        order.take_order = True
+        order.completion_status = False
+        
+        order.vehicle_number = vehicle_number
+        order.save()
+        
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "updates",
+            {
+                "type": "send_update",
+                "message": "Database updated",
+            }
+        )
+        return redirect("Pos")
+    else:
+        return redirect("Pos") 
 
 
 @login_required(login_url='SignIn')
