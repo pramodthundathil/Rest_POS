@@ -13,6 +13,7 @@ urlpatterns = [
     path("EditProduct/<int:pk>",views.EditProduct, name = "EditProduct"),
     path("list_add_ons",views.list_add_ons, name = "list_add_ons"),
     path("add_add_ons",views.add_add_ons, name = "add_add_ons"),
+    path("EditCategory/<int:pk>",views.EditCategory,name="EditCategory"),
 
     path("Pos",views.Pos,name="Pos"),
     path("Add_Table",views.Add_Table,name="Add_Table"),

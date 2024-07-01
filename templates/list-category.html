@@ -59,7 +59,7 @@
                                     <div class="d-flex align-items-center list-action">
 
                                         <a class="badge bg-success mr-2" data-toggle="tooltip" data-placement="top"
-                                            title="" data-original-title="Edit" href="#"><i
+                                            title="" data-original-title="Edit" href="{%url 'EditCategory' item.id %}"><i
                                                 class="ri-pencil-line mr-0"></i></a>
                                         <button class="badge bg-warning mr-2" data-toggle="modal"
                                             data-target="#deletemodel" data-original-title="Delete" href="#"><i
@@ -72,6 +72,7 @@
 
                                                     <div class="modal-body">
                                                         Are You Sure Do you Want to delete ?
+                                                        <br><span class="text-danger " style="font-size: small;">If you delete the category all the foods in this category also deleted ....</span>
                                                     </div>
                                                     <div class="modal-footer">
                                                         <button type="button" class="btn btn-secondary"

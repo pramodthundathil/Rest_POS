@@ -46,7 +46,8 @@ def List_Category(request):
 
 @login_required(login_url='SignIn')
 def DeleteCategory(request,pk):
-    FoodCategory.objects.get(id = pk).delete()
+    cat = FoodCategory.objects.get(id = pk)
+    cat.delete()
     messages.success(request,'Food Category Deleted')
     return redirect('List_Category')
 
@@ -131,12 +132,81 @@ def List_Product(request):
     return render(request,'list-product.html',context)
 
 @login_required(login_url='SignIn')
-def EditProduct(request,pk):
-    menu = Menu.objects.get(id = pk)
+def EditProduct(request, pk):
+   
+    menu = get_object_or_404(Menu, id=pk)
+    categories = FoodCategory.objects.all()
+    taxes = Tax.objects.all()
+    
+    if request.method == 'POST':
+        menu.name = request.POST.get('mname')
+        menu.price = float(request.POST.get('price'))
+        menu.potion = request.POST.get('potion')
+        menu.category_id = request.POST.get('category')
+        menu.stock = request.POST.get('stock')
+        menu.tax = request.POST.get('tax')
+        menu.tax_value_id = request.POST.get('tax_value')
+        menu.code = request.POST.get("code")
+        # Handle file upload
+        image = request.FILES.get('image')
+        if image:
+            menu.image = image
+        
+        # Calculate tax
+        if menu.tax_value:
+            tax_rate = menu.tax_value.tax_percentage / 100
+            if menu.tax == "Exclusive":
+                menu.tax_amount = round(menu.price * tax_rate, 2)
+                menu.price_Before_tax = round(menu.price, 2)
+                menu.price = round(menu.price + menu.tax_amount, 2)
+            elif menu.tax == "Inclusive":
+                menu.price_Before_tax = round(menu.price / (1 + tax_rate), 2)
+                menu.tax_amount = round(menu.price - menu.price_Before_tax, 2)
+        else:
+            menu.price_Before_tax = round(menu.price, 2)
+            menu.tax_amount = 0.0
+        
+        try:
+            menu.save()
+            messages.success(request, 'Menu updated successfully')
+            return redirect('EditProduct',pk = pk)  # Replace with the name of the view you want to redirect to
+        except Exception as e:
+            messages.error(request, f'Error updating menu: {e}')
+    
     context = {
-        "menu":menu,
+        'menu': menu,
+        'categories': categories,
+        'taxes': taxes,
     }
-    return render(request,"edit-product.html",context)
+    return render(request, "edit-product.html", context)
+
+
+@login_required(login_url='SignIn')
+def EditCategory(request,pk):
+
+    cat = get_object_or_404(FoodCategory, id=pk)
+    
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        image = request.FILES.get('image')
+        
+        if name:
+            cat.name = name
+        
+        if image:
+            cat.image = image
+        
+        try:
+            cat.save()
+            messages.success(request, 'Category updated successfully')
+            return redirect('EditCategory', pk = pk)  
+        except Exception as e:
+            messages.error(request, f'Error updating category: {e}')
+    
+    context = {
+        'cat': cat,
+    }
+    return render(request,'edit-category.html',context)
 
 @login_required(login_url='SignIn')
 def DeleteProduct(request,pk):

@@ -26,6 +26,11 @@
                         <div class="card-header d-flex justify-content-between">
                             <div class="header-title">
                                 <h4 class="card-title">Add Menu Item</h4>
+                                {% for message in messages %}
+                       <div class="alert {{message.tags}} " role="alert">
+                           <div class="iq-alert-text"><b>Alert</b> {{message}}</div>
+                        </div>
+                        {% endfor %}
                             </div>
                         </div>
                         <div class="card-body">
@@ -70,9 +75,9 @@
                                             <label>Portion *</label>
                                             <select name="potion" required class="selectpicker form-control" data-style="py-0">
                                                 <option selected disabled>Select Portion Of Food</option>
-                                                <option value="Quarter">Quarter</option>
-                                                <option value="Half">Half</option>
-                                                <option value="Full">Full</option>
+                                                <option value="Small">Small</option>
+                                                <option value="Medium">Medium</option>
+                                                <option value="Large">Large</option>
                                             </select>
                                         </div>
                                     </div>
@@ -98,9 +103,9 @@
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>Stock *</label>
-                                            <input type="number" name="stock"  class="form-control" placeholder="Enter Stock"
-                                                required>
+                                            <!-- <label>Stock *</label> -->
+                                            <input type="hidden" value="100" name="stock"  class="form-control" placeholder="Enter Stock"
+                                                >
                                             <div class="help-block with-errors"></div>
                                         </div>
                                     </div>

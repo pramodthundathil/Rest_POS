@@ -27,11 +27,12 @@ class FoodCategory(models.Model):
 
 
 class Menu(models.Model):
-    category = models.ForeignKey('FoodCategory', on_delete=models.DO_NOTHING)
+    category = models.ForeignKey('FoodCategory', on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     image = models.FileField(upload_to='foodimage')
     options = (("Quarter", "Quarter"), ("Half", "Half"), ("Full", "Full"))
-    potion = models.CharField(max_length=255, choices=options)  # Fixed typo from potion to portion
+    options2 = (("Small", "Small"), ("Medium", "Medium"), ("Large", "Large"))
+    potion = models.CharField(max_length=255, choices=options2)  # Fixed typo from potion to portion
     options1 = (("Veg", "Veg"), ("Non-Veg", "Non-Veg"), ("Egg", "Egg"))
     diet = models.CharField(max_length=20, choices=options1)
     price = models.FloatField()
