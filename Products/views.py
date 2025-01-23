@@ -267,12 +267,23 @@ def Pos(request):
             'total_price': total_price,
         })
 
+    in_progress_orders = Order.objects.filter(completion_status=False, status="In Progress")
+    preparing_orders = Order.objects.filter(completion_status=False, status="In Kitchen")
+    pending_orders = Order.objects.filter(completion_status=False, status="Pending")
+
+    # Combine results if needed
+    all_orders = Order.objects.filter(completion_status=False, status__in=["In Progress", "In Kitchen", "Pending"])
+    print(all_orders,'------------------------------------------')
     context = {
         "category":category,
         "menu":menu,
         "table":table,
         "orders":orders,
         'order_details': order_details,
+        "in_progress_orders": in_progress_orders,
+        "preparing_orders": preparing_orders,
+        "pending_orders": pending_orders,
+        "all_orders": all_orders.count()
     }
     return render(request,'posinterface.html',context)
 
@@ -285,6 +296,19 @@ def PosIndex(request):
     orders = Order.objects.filter(checkout_status = False)
     order_details = []
 
+    in_progress_orders = Order.objects.filter(completion_status=False, status="In Progress")
+    preparing_orders = Order.objects.filter(completion_status=False, status="In Kitchen")
+    pending_orders = Order.objects.filter(completion_status=False, status="Pending")
+
+    # Combine results if needed
+    all_orders = Order.objects.filter(completion_status=False, status__in=["In Progress", "In Kitchen", "Pending"])
+
+    # Display count
+    in_progress_count = in_progress_orders.count()
+    preparing_count = preparing_orders.count()
+    pending_count = pending_orders.count()
+    all_count = all_orders.count()
+
     for order in orders:
         total_items = sum(item.quantity for item in order.items.all())
         total_price = sum(item.get_total_price() for item in order.items.all())
@@ -292,6 +316,10 @@ def PosIndex(request):
             'order': order,
             'total_items': total_items,
             'total_price': total_price,
+            "in_progress_count":in_progress_count,
+            "preparing_count":preparing_count,
+            "pending_count":pending_count,
+            "all_orders":all_orders.count()
 
         })
 
