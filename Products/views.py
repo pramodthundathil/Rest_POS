@@ -271,6 +271,9 @@ def Pos(request):
     preparing_orders = Order.objects.filter(completion_status=False, status="In Kitchen")
     pending_orders = Order.objects.filter(completion_status=False, status="Pending")
 
+    in_progress_count = in_progress_orders.count()
+    preparing_count = preparing_orders.count()
+    pending_count = pending_orders.count()
     # Combine results if needed
     all_orders = Order.objects.filter(completion_status=False, status__in=["In Progress", "In Kitchen", "Pending"])
     print(all_orders,'------------------------------------------')
@@ -283,6 +286,9 @@ def Pos(request):
         "in_progress_orders": in_progress_orders,
         "preparing_orders": preparing_orders,
         "pending_orders": pending_orders,
+        "in_progress_count":in_progress_count,
+        "preparing_count":preparing_count,
+        "pending_count":pending_count,
         "all_orders": all_orders.count()
     }
     return render(request,'posinterface.html',context)
@@ -403,7 +409,9 @@ def add_to_order(request):
 
         # Render the updated order items and return as HTML
         item = OrderItem.objects.filter(order = order)
-        total_price = sum(item.get_total_price() for item in order.items.all())
+        order.total_price = sum(item.get_total_price() for item in order.items.all())
+        order.save()
+        total_price = order.total_price
         order_html = render_to_string('order-summery.html', {'order': order,"item":item,"total_price":total_price,"addons":addons})
 
         return JsonResponse({'order_html': order_html})
@@ -745,24 +753,33 @@ def calculate_tax(menu_item, quantity):
     return round(tax_value,2)
 
 def SettleOrder(request, pk):
-    order = get_object_or_404(Order, id=pk)
+    try:
+        order = get_object_or_404(Order, id=pk)
+    except:
+        messages.info(request,"Order not Found.....")
+        return redirect("Pos")
     if request.method == "POST":
         payment = request.POST.get("payment")
         order_items = OrderItem.objects.filter(order=order)
         total_price = sum(item.menu_item.price * item.quantity for item in order_items)
         total_tax_amount = sum(calculate_tax(item.menu_item, item.quantity) for item in order_items)
+        try:
+            checkout = Checkout.objects.create(
+                order=order,
+                payment_method=payment,
+                payment_status="Paid",
+                total_price=total_price,
+                tax_amount=total_tax_amount
+            )
+            checkout.save()
+            order.checkout_status = True
+            order.payment_method = payment
+            order.payment_status = 'Paid'
+            order.save()
+            messages.info(request, "Bill Settled....")
 
-        checkout = Checkout.objects.create(
-            order=order,
-            payment_method=payment,
-            payment_status="Paid",
-            total_price=total_price,
-            tax_amount=total_tax_amount
-        )
-        checkout.save()
-        order.checkout_status = True
-        order.save()
-        messages.info(request, "Bill Settled....")
+        except:
+            messages.info(request, "This Bill Already settled")
         return redirect("Pos")
 
     # Render the order settlement page if it's a GET request
@@ -770,11 +787,17 @@ def SettleOrder(request, pk):
     
 @allowed_users(allowed_roles=["admin"])   
 def ViewCheckouts(request):
-    checkout = Checkout.objects.all()
+    checkout = Checkout.objects.all().order_by('-id')
     context = {
         "checkout":checkout
     }
     return render(request,"settledorders.html",context)
+
+def delete_settled_order(request,pk):
+    checkout = get_object_or_404(Checkout, id= pk)
+    checkout.delete()
+    messages.success(request, "order deleted....")
+    return redirect("ViewCheckouts")
 
 
 def Reports(request):
@@ -953,3 +976,75 @@ def profile(request):
         "form": form
     }
     return render(request, "user_profile.html", context)
+
+
+
+# newly added edit functionalities 
+from .forms import TablesForm, TaxForm, MenuForm, FoodCategoryForm, AddOnsForm
+
+def edit_tax(request, pk):
+    tax = get_object_or_404(Tax, id = pk)
+    form = TaxForm(instance=tax)
+    if request.method == "POST":
+        form = TaxForm(request.POST, instance=tax)
+        if form.is_valid():
+            form.save()
+            messages.success(request,"Tax updated..")
+            return redirect(ListTax)
+        else:
+            messages.error(request,"Tax not updated..")
+            return redirect(ListTax)
+    return render(request,"edit_tax.html",{"form":form})
+
+def delete_tax(request, pk):
+    tax = get_object_or_404(Tax, id = pk)
+    tax.delete()
+    messages.success(request,"Tax Deleted..")
+    return redirect(ListTax)
+
+def edit_table(request, pk):
+    table = get_object_or_404(Tables, id=pk)
+    form = TablesForm(instance=table)
+    if request.method == "POST":
+        form = TablesForm(request.POST, instance=table)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Table updated successfully.")
+            return redirect('List_Table')
+        else:
+            messages.error(request, "Failed to update table.")
+    context = {
+        'form': form,
+        'table': table,
+    }
+    return render(request, 'edit_table.html', context)
+
+def delete_table(request, pk):
+    table = get_object_or_404(Tables, id=pk)
+    table.delete()
+    messages.success(request, "Table deleted successfully.")
+    return redirect('List_Table')
+
+def edit_add_on(request, pk):
+    add_on = get_object_or_404(AddOns, id=pk)
+    form = AddOnsForm(instance=add_on)
+    if request.method == "POST":
+        form = AddOnsForm(request.POST, instance=add_on)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Add-on updated successfully.")
+            return redirect('list_add_ons')
+        else:
+            messages.error(request, "Failed to update add-on.")
+    context = {
+        'form': form,
+        'add_on': add_on,
+    }
+    return render(request, 'edit_add_on.html', context)
+
+def delete_add_on(request, pk):
+    add_on = get_object_or_404(AddOns, id=pk)
+    add_on.delete()
+    messages.success(request, "Add-on deleted successfully.")
+    return redirect('list_add_ons')
+

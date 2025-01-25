@@ -46,12 +46,13 @@
 </div> -->
 <style>
     @media (max-width:640px) {
-        #menuimage{
+        #menuimage {
             display: none;
         }
-        
+
     }
-    .card-body::-webkit-scrollbar{
+
+    .card-body::-webkit-scrollbar {
         display: none;
     }
 </style>
@@ -62,13 +63,13 @@
 
 <div class="card-header d-flex justify-content-between">
     <div class="header-title">
-        <h4 class="card-title">Order {{order}}</h4>
+        <h4 class="card-title">Order #{{order.token}} - {{order.table}} </h4>
     </div>
     <div class="card-header-toolbar d-flex align-items-center">
         {% if order.take_order == True %}
         <h6 class="badge bg-warning">Order In Kitchen</h6>
         {% endif %}
-        &nbsp;&nbsp;&nbsp; User:{{order.user}} 
+        &nbsp;&nbsp;&nbsp; User:{{order.user}}
     </div>
 </div>
 <div class="card-body" style="overflow-y: scroll;">
@@ -87,13 +88,13 @@
                     {{i.menu_item.name}}
                     <span style="font-size: x-small; color: gary;">(Add: {{i.special_instructions}}
                         {% for x in i.add_ons.all %}
-                            {{ x.name }}, 
+                        {{ x.name }},
                         {% endfor %}
                         )
-                        </span>
+                    </span>
                 </td>
                 <td>
-                   DHS {{i.menu_item.price}}
+                    DHS {{i.menu_item.price | floatformat:2}}
                 </td>
                 <td>
                     <a href="javascript:void(0);" class="btn btn-primary btn-decrease" data-item-id="{{i.id}}">-</a>
@@ -101,59 +102,61 @@
                     <a href="javascript:void(0);" class="btn btn-primary btn-increase" data-item-id="{{i.id}}">+</a>
                 </td>
                 <td>
-                    {{i.get_total_price}}
-                                                <button class="badge bg-warning mr-2" data-toggle="modal"
-                                                data-target="#deletemodel" data-original-title="Delete" href="#"><i
-                                                    class="ri-delete-bin-line mr-0"></i></button>
-                                            <!-- Delete Modal -->
-                                            <div class="modal fade" id="deletemodel" tabindex="-1" role="dialog"
-                                                aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog" role="document">
-                                                    <div class="modal-content">
-    
-                                                        <div class="modal-body">
-                                                            Are You Sure Do you Want to delete ?
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-dismiss="modal">No</button>
-                                                            <a href="{%url 'Delete_menuitem' i.id %}"
-                                                                class="btn btn-danger">Yes</a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <button class="btn btn-sm btn-secondary" data-toggle="modal" data-target="#exampleModalScrollable{{i.id}}">Add Extra</button>
+                    {{i.get_total_price | floatformat:2}}
+                    <button class="badge bg-warning mr-2" data-toggle="modal" data-target="#deletemodel"
+                        data-original-title="Delete" href="#"><i class="ri-delete-bin-line mr-0"></i></button>
+                    <!-- Delete Modal -->
+                    <div class="modal fade" id="deletemodel" tabindex="-1" role="dialog"
+                        aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
 
-                                           <!-- Add Extra Modal -->
-<div class="modal fade" id="exampleModalScrollable{{i.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalScrollableTitle">Add Extras</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="addExtrasForm{{i.id}}" action="{% url 'add_on_to_item' i.id order.id %}" method="post">
-                    
-                    {% for add in addons %}
-                        <input type="checkbox" name="addons" value="{{add.id}}" class="">
-                        <label class="">{{add.name}} price: {{add.price}}</label><br>
-                    {% endfor %}
-                    <br><br>
-                    <label for="">Special Instructions:</label>
-                    <input type="text" class="form-control" placeholder="Special Instructions" name="instraction">
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="submitAddExtrasForm('{{i.id}}')">Save changes</button>
-            </div>
-        </div>
-    </div>
-</div>
+                                <div class="modal-body">
+                                    Are You Sure Do you Want to delete ?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                                    <a href="{%url 'Delete_menuitem' i.id %}" class="btn btn-danger">Yes</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-secondary" data-toggle="modal"
+                        data-target="#exampleModalScrollable{{i.id}}">Add Extra</button>
+
+                    <!-- Add Extra Modal -->
+                    <div class="modal fade" id="exampleModalScrollable{{i.id}}" tabindex="-1" role="dialog"
+                        aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-scrollable" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalScrollableTitle">Add Extras</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="addExtrasForm{{i.id}}" action="{% url 'add_on_to_item' i.id order.id %}"
+                                        method="post">
+
+                                        {% for add in addons %}
+                                        <input type="checkbox" name="addons" value="{{add.id}}" class="">
+                                        <label class="">{{add.name}} price: {{add.price}}</label><br>
+                                        {% endfor %}
+                                        <br><br>
+                                        <label for="">Special Instructions:</label>
+                                        <input type="text" class="form-control" placeholder="Special Instructions"
+                                            name="instraction">
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-primary"
+                                        onclick="submitAddExtrasForm('{{i.id}}')">Save changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
 
                 </td>
@@ -167,8 +170,9 @@
     </div>
 </div>
 <div class="d-flex flex-wrap justify-content-end align-items-center mb-3 p-3">
-    <div class="buttons p-3"><a href="javascript:void(0);" onclick="printReceipt('{{ order.id }}')" class="btn btn-info">Print Bill</a></div>
-    <div class="buttons p-3"><a href="javascript:void(0);" id="place-order-btn-1" class="btn btn-warning">Place Order</a></div>
+    <div class="buttons p-3"><a target="_blank" href="{%url 'receipt'  order.id %}" class="btn btn-info">Print Bill</a></div>
+    <div class="buttons p-3"><a href="javascript:void(0);" id="place-order-btn-1" class="btn btn-warning">Place
+            Order</a></div>
     <!-- <div class="buttons p-3"><a href="" class="btn btn-success">Settle Bill</a></div> -->
 </div>
 
@@ -176,7 +180,8 @@
 <!-- Existing HTML and CSS code -->
 
 <!-- Vehicle Number Modal -->
-<div class="modal fade" id="vehicleNumberModal" tabindex="-1" role="dialog" aria-labelledby="vehicleNumberModalLabel" aria-hidden="true">
+<div class="modal fade" id="vehicleNumberModal" tabindex="-1" role="dialog" aria-labelledby="vehicleNumberModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -199,7 +204,7 @@
 <script>
     function printReceipt(orderId) {
         var printWindow = window.open('/Products/receipt/' + orderId, '_blank');
-        printWindow.onload = function() {
+        printWindow.onload = function () {
             printWindow.print();
         };
     }
@@ -235,7 +240,7 @@
         function takeOrder(vehicleNumber = null) {
             var data = {
                 'order_id': "{{ order.id }}",
-                
+
             };
             if (vehicleNumber) {
                 data['vehicle_number'] = vehicleNumber;
@@ -248,11 +253,11 @@
                 type: "POST",
                 data: data,
                 success: function (response) {
-                    
+
                     window.location.href = "{%url 'Pos'%}";
                     // alert("Order placed successfully!");
                     console.log("Order placed successfully:", response);
-                     // Debugging information
+                    // Debugging information
                 },
                 error: function (xhr, errmsg, err) {
                     console.error("Error placing order:", xhr.status, xhr.responseText); // Debugging information
@@ -265,24 +270,23 @@
     function submitAddExtrasForm(itemId) {
         var form = document.getElementById('addExtrasForm' + itemId);
         var formData = new FormData(form);
-        
+
         $.ajax({
             url: form.action,
             type: 'POST',
             data: formData,
             processData: false,
             contentType: false,
-            success: function(response) {
+            success: function (response) {
                 // Handle success, e.g., close modal, show success message, update the page dynamically
                 console.log('Form submitted successfully:', response);
                 $('#exampleModalScrollable' + itemId).modal('hide');
                 location.reload(); // Reload the page to reflect changes, or update the DOM dynamically
             },
-            error: function(xhr, errmsg, err) {
+            error: function (xhr, errmsg, err) {
                 // Handle error
                 console.error('Error submitting form:', xhr.status, xhr.responseText);
             }
         });
     }
 </script>
-

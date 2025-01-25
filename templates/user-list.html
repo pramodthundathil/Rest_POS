@@ -73,15 +73,14 @@
                                <td>{{items.groups.all.0.name}}</td>
                                <td>
                                   <div class="flex align-items-center list-user-action">
-                                     <a class="btn btn-sm bg-primary" data-toggle="tooltip" data-placement="top" title=""
-                                        data-original-title="Edit" href="#"><i class="ri-pencil-line mr-0"></i></a>
-                                     <button class="btn btn-sm bg-primary" data-original-title="Delete" data-toggle="modal" data-target="#deletemodel"><i class="ri-delete-bin-line mr-0" ></i></button>
+               
+                                     <button class="btn btn-sm bg-danger" data-original-title="Delete" data-toggle="modal" data-target="#deletemodel{{items.id}}"><i class="ri-delete-bin-line mr-0" ></i></button>
                                   </div>
                                </td>
                             </tr>
 
                              <!-- Delete Modal -->
-                     <div class="modal fade" id="deletemodel" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                     <div class="modal fade" id="deletemodel{{items.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
                         <div class="modal-dialog" role="document">
                            <div class="modal-content">
                             

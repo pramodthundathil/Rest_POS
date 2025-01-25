@@ -6,7 +6,7 @@
                         <div class="d-flex align-items-top justify-content-between">
                             <div class="">
                                 <h5>{{cat}}</h5>
-                                <p class="mb-0">Items : 98</p>
+                                <p class="mb-0">Items : {{cat.items.all | length}}</p>
                             </div>
                             <div class="">
                                 <img src="{{cat.image.url}}" style="width:100px" height="100px" alt="">

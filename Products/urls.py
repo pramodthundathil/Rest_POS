@@ -42,6 +42,8 @@ urlpatterns = [
     path('Status_Change_OrderCompeletion/<int:pk>', views.Status_Change_OrderCompeletion, name='Status_Change_OrderCompeletion'),
     path('Status_Change_Menu_Finish', views.Status_Change_Menu_Finish, name='Status_Change_Menu_Finish'),
     path('SettleOrder/<int:pk>', views.SettleOrder, name='SettleOrder'),
+    path('delete_settled_order/<int:pk>', views.delete_settled_order, name='delete_settled_order'),
+    
     path('ViewCheckouts', views.ViewCheckouts, name='ViewCheckouts'),
     path('search-menu/', views.search_menu, name='search_menu'),
 
@@ -55,7 +57,16 @@ urlpatterns = [
     path('ListTax', views.ListTax, name='ListTax'),
 
 
-    path("profile",views.profile,name="profile")
+    path("profile",views.profile,name="profile"),
+
+    # new edits 
+
+    path("edit_tax/<int:pk>",views.edit_tax, name="edit_tax"),
+    path("delete_tax/<int:pk>",views.delete_tax, name="delete_tax"),
+    path("edit_table/<int:pk>", views.edit_table, name="edit_table"),
+    path("delete_table/<int:pk>", views.delete_table, name="delete_table"),
+    path("edit_add_on/<int:pk>", views.edit_add_on, name="edit_add_on"),
+    path("delete_add_on/<int:pk>", views.delete_add_on, name="delete_add_on"),
 
 
 

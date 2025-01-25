@@ -536,7 +536,7 @@
                                                   <h5 class="mb-1">{{request.user}}</h5>
                                                   <p class="mb-0">Since {{request.user.date_joined}}</p>
                                                   <div class="d-flex align-items-center justify-content-center mt-3">
-                                                      <a href="#" class="btn border mr-2">Profile</a>
+                                                      <a href="{%url 'profile' %}" class="btn border mr-2">Profile</a>
                                                       <a href="{%url 'SignOut' %}" class="btn border">Sign Out</a>
                                                   </div>
                                               </div>

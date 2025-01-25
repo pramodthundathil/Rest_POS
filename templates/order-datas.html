@@ -7,9 +7,9 @@
         <div class="card-body">
             <div class="d-flex align-items-top justify-content-between row">
                 <div class="col-8">
-                    <h6><span style="font-size: small;">Order: &nbsp;&nbsp;&nbsp;</span>{{order.order}}</h6>
+                    <h6><span style="font-size: small;">Order: &nbsp;&nbsp;&nbsp;</span>{{order.order.token}}-{{order.order.table}}</h6>
                     <h6>Car: {{order.order.vehicle_number}}</h6>
-                    <p class="mb-0">Total Amount: {{order.total_price}}</p>
+                    <p class="mb-0">Total Amount: {{order.total_price | floatformat:2}}</p>
                     <p class="mb-0">Total Items: {{order.total_items}}</p>
                     <p>Status: <span class="badge bg-info">{{order.order.status}}</span></p>
                     <button class="btn btn-dark btn-sm" data-toggle="modal"
@@ -58,8 +58,11 @@ aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
             <label for="">Payment Method:</label>
             <select name="payment" required class="form-control" id="">
                 <option value="" selected disabled>---------------</option>
-                <option value="cash">Cash</option>
-                <option value="bank">Bank</option>
+                <option value="Cash">Cash</option>
+                <option value="Credit Card">Credit Card</option>
+                <option value="Debit Card">Debit Card</option>
+                <option value="Online Payment">Online Payment</option>
+                <option value="UPI">UPI</option>
             </select>
         </div>
         <div class="modal-footer">

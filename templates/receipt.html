@@ -3,116 +3,159 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Receipt</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>.</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            font-size: 10px;
+            font-size: 12px;
             margin: 0;
             padding: 0;
         }
 
-        .receipt-container {
+        .bill-container {
             width: 80mm;
-            /* Standard thermal paper width */
             margin: 0 auto;
             padding: 10px;
-            border: none;
+            border: 1px solid #ddd;
         }
 
-        .receipt-header {
+        .bill-header {
             text-align: center;
             margin-bottom: 10px;
         }
 
-        .receipt-header h2 {
-            font-size: 14px;
+        .bill-header h2 {
+            font-size: 16px;
             margin: 0;
         }
 
-        .receipt-header p {
-            margin: 0;
-            font-size: 10px;
+        .bill-header p {
+            margin: 2px 0;
         }
 
-        .receipt-items {
-            margin-top: 10px;
+        .bill-details {
+            margin: 10px 0;
+            font-size: 12px;
         }
 
-        .receipt-items table {
+        .bill-items {
             width: 100%;
             border-collapse: collapse;
-        }
-
-        .receipt-items th,
-        .receipt-items td {
-            padding: 3px;
-            text-align: left;
-            font-size: 10px;
-        }
-
-        .receipt-items th {
-            border-bottom: 1px dashed #000;
-        }
-
-        .receipt-items td {
-            border-bottom: 1px dashed #000;
-        }
-
-        .receipt-footer {
             margin-top: 10px;
-            text-align: center;
         }
 
-        .receipt-footer p {
-            margin: 0;
+        .bill-items th,
+        .bill-items td {
+            text-align: left;
+            padding: 5px;
+            border-bottom: 1px dashed #000;
+        }
+
+        .bill-items th {
+            font-weight: bold;
+        }
+
+        .bill-totals {
+            margin-top: 10px;
+        }
+
+        .bill-totals .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+
+        .bill-footer {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .bill-footer p {
+            margin: 5px 0;
         }
     </style>
 </head>
 
-<body>
-    <div class="receipt-container" style="border:1px solid;padding: 20px;">
-        <div class="receipt-header">
-            <h2>Receipt</h2>
-            <p><strong>{{rest_details.Name_of_restaurant}}</strong></p>
+<body  id="invoice-content">
+    <div class="bill-container">
+        <div class="bill-header">
+            <h2>{{rest_details.Name_of_restaurant}}</h2>
+            <p>Tel: {{rest_details.mobile}}</p>
+            <p>Mob: {{rest_details.phone}}</p>
             <p>{{rest_details.location}}</p>
-            <p><small><strong>TRN: </strong>{{rest_details.TRN}}</small></p>
-            <p>Order {{ order }}</p>
-            <p>{{order.create_date}}</p>
+            <p>TRN: {{rest_details.TRN}}</p>
+            <h3>TAX INVOICE</h3>
         </div>
-        <div class="receipt-items">
-            <table>
+
+        <div class="bill-details">
+            <div class="head-body" style="display: flex;justify-content: space-between;">
+                <p><strong>Bill#: </strong>{{order.id}}</p>
+            <p><strong>Token#: </strong>{{order.token}}</p>
+            </div>
+            
+            <p><strong>Date: </strong>{{order.create_date}}</p>
+            
+            <p><strong>Table No: </strong>{{order.table}}</p>
+        </div>
+
+        <table class="bill-items">
+            <thead>
                 <tr>
-                    <th>Item</th>
+                    <th>Description</th>
                     <th>Qty</th>
-                    <th>Price</th>
-                    <th>Total</th>
+                   
+                    <th style="text-align: right !important;">Amount</th>
                 </tr>
-                {% for i in item %}
+            </thead>
+            <tbody>
+               {% for i in item %}
                 <tr>
                     <td>{{ i.menu_item.name }}</td>
                     <td>{{ i.quantity }}</td>
-                    <td>DHS {{ i.menu_item.price }}</td>
-                    <td>DHS {{ i.get_total_price }}</td>
+                   
+                    <td style="text-align: right !important;">DHS {{ i.get_total_price | floatformat:2}}</td>
                 </tr>
                 {% endfor %}
-                <tr>
-                    <th colspan="3">Total</th>
-                    <th>DHS {{ total_price }}</th>
-                </tr>
-            </table>
+            </tbody>
+        </table>
+
+        <div class="bill-totals">
+            <div class="totals-row">
+                <span>Total before VAT:</span>
+                <span>DHS {{ order.total_before_tax | floatformat:2 }}</span>
+            </div>
+            <div class="totals-row">
+                <span>VAT incl.:</span>
+                <span>DHS {{ order.total_tax | floatformat:2 }}</span>
+            </div>
+            <div class="totals-row">
+                <span><strong>Grand Total:</strong></span>
+                <span><strong>DHS {{ order.total_price | floatformat:2 }}</strong></span>
+            </div>
         </div>
-        <div class="receipt-footer">
-            <p>Thank you for your order!</p>
+
+        <div class="bill-footer">
+            <p><strong>Payment Method: {{order.payment_method}}</strong></p>
+            <p><strong>Amount Paid: {{order.total_price}}</strong></p>
+            <p>** {{order.payment_status}} **</p>
+            <p>Cashier Name: {{request.user}}</p>
+            <p>*** THANK YOU COME AGAIN ***</p>
         </div>
     </div>
+
     <script>
+      
         window.onload = function () {
             window.print();
             window.onafterprint = function () {
                 window.close();
             };
+            setTimeout(function () {
+                window.close(); // Close the window after printing
+            }, 100); 
         };
+    </script>
     </script>
 </body>
 

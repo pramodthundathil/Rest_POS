@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.timezone import now
 
 
 class Tax(models.Model):
@@ -27,7 +28,7 @@ class FoodCategory(models.Model):
 
 
 class Menu(models.Model):
-    category = models.ForeignKey('FoodCategory', on_delete=models.CASCADE)
+    category = models.ForeignKey('FoodCategory', on_delete=models.CASCADE, related_name="items")
     name = models.CharField(max_length=255)
     image = models.FileField(upload_to='foodimage')
     options = (("Quarter", "Quarter"), ("Half", "Half"), ("Full", "Full"))
@@ -90,6 +91,7 @@ class Tables(models.Model):
 
 class Order(models.Model):
 
+    token = models.IntegerField(default=0)
     table = models.ForeignKey(Tables, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Assuming you have a user model for waiters/chefs
     create_date = models.DateTimeField(auto_now_add=True)
@@ -99,6 +101,24 @@ class Order(models.Model):
     take_order = models.BooleanField(default=False)
     vehicle_number = models.CharField(max_length=20, null=True, blank=True)
     completion_status = models.BooleanField(default=False)
+
+    total_price = models.FloatField(default=0)
+    total_tax = models.FloatField(default=0)
+    total_before_tax = models.FloatField(default=0)
+    payment_method = models.CharField(max_length=50, default="Pending")
+    payment_status = models.CharField(max_length=20, choices=(("Pending", "Pending"), ("Paid", "Paid")),default="Pending")
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            today = now().date()
+            last_token = Order.objects.filter(create_date__date=today).aggregate(
+                max_token=models.Max('token')
+            )['max_token'] or 0
+            self.token = last_token + 1  # Increment the token
+            print(f"Generated token: {self.token}")  # Debugging print
+
+        super().save(*args, **kwargs)
+    
 
     def __str__(self):
         return f"#{self.id} -  {self.table}"
@@ -112,6 +132,11 @@ class OrderItem(models.Model):
     special_instructions = models.CharField(max_length=500, null=True, blank=True)
     add_ons = models.ManyToManyField(AddOns,null=True, blank=True)
     completion_status = models.BooleanField(default=False) 
+
+    def save(self, *args, **kwargs):
+        self.price = round(self.price, 2)
+        super().save(*args, **kwargs)
+
 
     def __str__(self):
         return f"{self.quantity} x {self.menu_item.name}"
@@ -134,6 +159,8 @@ class Checkout(models.Model):
 
 class RestaurantDetails(models.Model):
     Name_of_restaurant = models.CharField(max_length=255)
+    phone = models.CharField(max_length=20, null=True, blank=True)
+    mobile = models.CharField(max_length=20, null=True, blank=True)
     TRN = models.CharField(max_length=100)
     location = models.CharField(max_length=255)
     Address = models.TextField(null=True, blank=True)
