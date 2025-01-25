@@ -130,3 +130,15 @@ class Checkout(models.Model):
 
     def __str__(self):
         return f"Checkout for Order {self.order.id}"
+    
+
+class RestaurantDetails(models.Model):
+    Name_of_restaurant = models.CharField(max_length=255)
+    TRN = models.CharField(max_length=100)
+    location = models.CharField(max_length=255)
+    Address = models.TextField(null=True, blank=True)
+    logo = models.FileField(upload_to="logo", null=True, blank=True)
+
+
+    def __str__(self):
+        return str(self.Name_of_restaurant)

@@ -11,7 +11,7 @@ from asgiref.sync import async_to_sync
 from Home.decorators import admin_only, allowed_users
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-
+from .forms import RestaurantDetailsForm
 # Create your views here.
 
 @login_required(login_url='SignIn')
@@ -501,17 +501,58 @@ def TakeOrder(request, pk):
         return redirect("Pos")
     else:
         return redirect("Pos") 
+    
+
+
+    
+from escpos.printer import Usb
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+
+@login_required(login_url='SignIn')
+def print_receipt(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    items = order.items.all()
+    total_price = sum(item.get_total_price() for item in items)
+    rest_details = RestaurantDetails.objects.all().last()
+
+    try:
+        # Replace with your printer's actual Vendor ID and Product ID
+        printer = Usb(0x04b8, 0x0202)  # Example values
+        
+        # Print Header
+        printer.textln("Receipt".center(32))  # Adjust width (32) to match printer's max line width
+        printer.textln(f"Order: {order.id}".center(32))
+        printer.textln("\n")
+        
+        # Print Items
+        for item in items:
+            printer.textln(f"{item.menu_item.name[:15]:15} {item.quantity:3} {item.get_total_price():>7}")
+
+        # Print Footer
+        printer.textln("\n--------------------------\n")
+        printer.textln(f"Total: DHS {round(total_price, 2):.2f}".rjust(32))
+        printer.textln("\nThank you for your order!\n")
+        printer.cut()
+        printer.close()
+
+        return JsonResponse({"status": "success", "message": "Receipt printed successfully!"})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
 
 
 @login_required(login_url='SignIn')
 def receipt_view(request, order_id):
     order = get_object_or_404(Order, id=order_id)
+    rest_details = RestaurantDetails.objects.all().last()
     items = order.items.all()
     total_price = sum(item.get_total_price() for item in items)
     context = {
         'order': order,
         'item': items,
         'total_price': round(total_price,2),
+        "rest_details":rest_details
     }
     return render(request, 'receipt.html', context)
 
@@ -887,3 +928,28 @@ def add_add_ons(request):
 
     
 
+
+
+from .forms import RestaurantDetailsForm
+from .models import RestaurantDetails
+# resurgent Details adding
+
+def profile(request):
+    details = RestaurantDetails.objects.all().last()
+    
+    if request.method == "POST":
+        if details:
+            form = RestaurantDetailsForm(request.POST, request.FILES, instance=details)
+        else:
+            form = RestaurantDetailsForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            form.save()
+            return redirect('profile')  # Redirect to the same page or any other page
+    else:
+        form = RestaurantDetailsForm(instance=details)
+
+    context = {
+        "form": form
+    }
+    return render(request, "user_profile.html", context)
