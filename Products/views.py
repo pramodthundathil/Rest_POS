@@ -548,15 +548,15 @@ def TakeOrder(request, pk):
 
 
     
-from escpos.printer import Usb
+# from escpos.printer import Usb
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 
 import os
-import tempfile
+# import tempfile
 
-from weasyprint import HTML
+# from weasyprint import HTML
 
 # @login_required(login_url='SignIn')
 # def print_invoice(request, order_id):
