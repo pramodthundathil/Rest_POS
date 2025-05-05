@@ -8,16 +8,20 @@
             <div class="d-flex align-items-top justify-content-between row">
                 <div class="col-8">
                     <h6><span style="font-size: small;">Order: &nbsp;&nbsp;&nbsp;</span>{{order.order.token}}-{{order.order.table}}</h6>
+                    {% if order.order.vehicle_number %}
                     <h6>Car: {{order.order.vehicle_number}}</h6>
+                    {% elif order.order.delivery_boy %}
+                    <h6>Delivery Boy: {{order.order.delivery_boy.first_name}} </h6>
+                    {% endif %}
                     <p class="mb-0">Total Amount: {{order.total_price | floatformat:2}}</p>
                     <p class="mb-0">Total Items: {{order.total_items}}</p>
                     <p>Status: <span class="badge bg-info">{{order.order.status}}</span></p>
                     <button class="btn btn-dark btn-sm" data-toggle="modal"
                     data-target="#exampleModalScrollable{{order.order.id}}">Settle Bill</button>
-                    <!-- <a href="{%url 'print_receipt' order.order.id %}" class="btn btn-warning btn-sm" >Print Bill</a> -->
+                    
 
                     <a href="javascript:void(0);"  onclick="printReceipt('{{ order.order.id }}')" class="btn btn-warning btn-sm">Print Bill</a>
-                    
+                    <a href="{%url 'print_invoice' order.order.id %}" class="btn btn-warning btn-sm" >Print New Bill</a>
                 </div>
                 <div class="col-4">
                     {% if request.user.groups.all.0.name == "admin" %}

@@ -91,6 +91,9 @@ def AddUser(request):
 
             group = Group.objects.get(name=utype)
             user.groups.add(group)
+            if utype == "dboy":
+                user.is_active = False
+                user.save()
             messages.success(request,"Staff added To Staff list....")
             return redirect("ListUser")
     return render(request,"user-add.html")

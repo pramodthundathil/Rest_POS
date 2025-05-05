@@ -86,6 +86,8 @@ class Tables(models.Model):
     def __str__(self):
         if self.Table_number == 100:
             return "Takeaway"
+        elif self.Table_number == 101:
+            return "Home Delivery"
         return f"Table: {self.Table_number}"
 
 
@@ -101,6 +103,8 @@ class Order(models.Model):
     take_order = models.BooleanField(default=False)
     vehicle_number = models.CharField(max_length=20, null=True, blank=True)
     completion_status = models.BooleanField(default=False)
+
+    delivery_boy = models.ForeignKey(User, on_delete=models.SET_NULL, null=True,blank=True, related_name="delivery_noy")
 
     total_price = models.FloatField(default=0)
     total_tax = models.FloatField(default=0)

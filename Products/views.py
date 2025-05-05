@@ -267,15 +267,19 @@ def Pos(request):
             'total_price': total_price,
         })
 
-    in_progress_orders = Order.objects.filter(completion_status=False, status="In Progress")
-    preparing_orders = Order.objects.filter(completion_status=False, status="In Kitchen")
-    pending_orders = Order.objects.filter(completion_status=False, status="Pending")
+    in_progress_orders = Order.objects.filter(completion_status=False,checkout_status = False, status="In Progress")
+    preparing_orders = Order.objects.filter(completion_status=False,checkout_status = False, status="In Kitchen")
+    pending_orders = Order.objects.filter(completion_status=False,checkout_status = False, status="Pending")
 
+    # Combine results if needed
+    all_orders = Order.objects.filter(completion_status=False,checkout_status = False,status__in=["In Progress", "In Kitchen", "Pending"])
+
+    # Display count
     in_progress_count = in_progress_orders.count()
     preparing_count = preparing_orders.count()
     pending_count = pending_orders.count()
     # Combine results if needed
-    all_orders = Order.objects.filter(completion_status=False, status__in=["In Progress", "In Kitchen", "Pending"])
+    all_orders = Order.objects.filter(completion_status=False,checkout_status = False, status__in=["In Progress", "In Kitchen", "Pending"])
     print(all_orders,'------------------------------------------')
     context = {
         "category":category,
@@ -302,12 +306,12 @@ def PosIndex(request):
     orders = Order.objects.filter(checkout_status = False)
     order_details = []
 
-    in_progress_orders = Order.objects.filter(completion_status=False, status="In Progress")
-    preparing_orders = Order.objects.filter(completion_status=False, status="In Kitchen")
-    pending_orders = Order.objects.filter(completion_status=False, status="Pending")
+    in_progress_orders = Order.objects.filter(completion_status=False,checkout_status = False, status="In Progress")
+    preparing_orders = Order.objects.filter(completion_status=False,checkout_status = False, status="In Kitchen")
+    pending_orders = Order.objects.filter(completion_status=False,checkout_status = False, status="Pending")
 
     # Combine results if needed
-    all_orders = Order.objects.filter(completion_status=False, status__in=["In Progress", "In Kitchen", "Pending"])
+    all_orders = Order.objects.filter(completion_status=False,checkout_status = False, status__in=["In Progress", "In Kitchen", "Pending"])
 
     # Display count
     in_progress_count = in_progress_orders.count()
@@ -347,6 +351,8 @@ def OrderSingle(request,pk):
     item = OrderItem.objects.filter(order = order)
     total_price = round(sum(item.get_total_price() for item in order.items.all()),2)
     addons = AddOns.objects.all()
+    users = User.objects.filter(groups__name = "dboy")
+
     
 
 
@@ -356,7 +362,8 @@ def OrderSingle(request,pk):
         "order":order,
         "item":item,
         "total_price":round(total_price,2),
-        "addons":addons
+        "addons":addons,
+        "users":users
     }
     return render(request,"order-single.html",context)
 
@@ -399,6 +406,7 @@ def add_to_order(request):
         menu_item = get_object_or_404(Menu, id=menu_item_id)
         order = get_object_or_404(Order, id=order_id)
         addons = AddOns.objects.all()
+        users = User.objects.filter(groups__name = "dboy")
 
 
         # Create or update the OrderItem
@@ -412,7 +420,7 @@ def add_to_order(request):
         order.total_price = sum(item.get_total_price() for item in order.items.all())
         order.save()
         total_price = order.total_price
-        order_html = render_to_string('order-summery.html', {'order': order,"item":item,"total_price":total_price,"addons":addons})
+        order_html = render_to_string('order-summery.html', {'order': order,"item":item,"total_price":total_price,"addons":addons,"users":users})
 
         return JsonResponse({'order_html': order_html})
     return JsonResponse({'error': 'Invalid request'}, status=400)
@@ -454,16 +462,18 @@ def increase_quantity(request):
         order_item = get_object_or_404(OrderItem, id=item_id)
         order_item.quantity += 1
         order_item.save()
+        users = User.objects.filter(groups__name = "dboy")
 
         item = OrderItem.objects.filter(order = order_item.order)
         total_price = sum(item.get_total_price() for item in order_item.order.items.all())
-        order_html = render_to_string('order-summery.html', {'order': order_item.order, 'total_price': total_price,"item":item})
+        order_html = render_to_string('order-summery.html', {'order': order_item.order, 'total_price': total_price,"item":item,"users":users})
 
         return JsonResponse({'order_html': order_html})
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 @login_required(login_url='SignIn')
 def decrease_quantity(request):
+    users = User.objects.filter(groups__name = "dboy")
     if request.method == "POST":
         item_id = request.POST.get('item_id')
         order_item = get_object_or_404(OrderItem, id=item_id)
@@ -473,7 +483,7 @@ def decrease_quantity(request):
 
         item = OrderItem.objects.filter(order = order_item.order)
         total_price = sum(item.get_total_price() for item in order_item.order.items.all())
-        order_html = render_to_string('order-summery.html', {'order': order_item.order, 'total_price': total_price,"item":item})
+        order_html = render_to_string('order-summery.html', {'order': order_item.order, 'total_price': total_price,"item":item,"users":users})
 
         return JsonResponse({'order_html': order_html})
     return JsonResponse({'error': 'Invalid request'}, status=400)
@@ -491,25 +501,50 @@ def Delete_menuitem(request,pk):
 def TakeOrder(request, pk):
     order = get_object_or_404(Order, id=pk)
     if request.method == "POST":
-        vehicle_number = request.POST.get('vehicle_number', " ")
+        vehicle_number = request.POST.get('vehicle_number', "")
+        delivery_boy_id = request.POST.get("dboy")
+        
+        # Update delivery boy if provided
+        if delivery_boy_id:
+            try:
+                dboy = get_object_or_404(User, id=int(delivery_boy_id))
+                order.delivery_boy = dboy
+                print(f"Delivery boy set to: {dboy.first_name}")  # Debug log
+            except Exception as e:
+                print(f"Error setting delivery boy: {e}")  # Debug log
+        
+        # Update vehicle number if provided
+        if vehicle_number:
+            order.vehicle_number = vehicle_number
+            print(f"Vehicle number set to: {vehicle_number}")  # Debug log
+            
+        # Update order status
         order.take_order = True
         order.completion_status = False
-        
-        order.vehicle_number = vehicle_number
         order.save()
         
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            "updates",
-            {
-                "type": "send_update",
-                "message": "Database updated",
-            }
-        )
+        # Send update through WebSocket
+        try:
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "updates",
+                {
+                    "type": "send_update",
+                    "message": "Database updated",
+                }
+            )
+        except Exception as e:
+            print(f"Error sending WebSocket update: {e}")
+        
+        # For AJAX requests, return JSON response
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'success', 'message': 'Order placed successfully'})
+        
+        # For regular requests, redirect
         return redirect("Pos")
     else:
-        return redirect("Pos") 
-    
+        # Handle GET request
+        return redirect("Pos")
 
 
     
@@ -518,36 +553,195 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 
+import win32print
+import os
+import tempfile
+
+from weasyprint import HTML
+
+# @login_required(login_url='SignIn')
+# def print_invoice(request, order_id):
+#     order = get_object_or_404(Order, id=order_id)
+#     rest_details = RestaurantDetails.objects.all().last()
+#     items = order.items.all()
+#     total_price = sum(item.get_total_price() for item in items)
+#     context = {
+#         'order': order,
+#         'item': items,
+#         'total_price': round(total_price,2),
+#         "rest_details":rest_details
+#     }
+
+#     # Render the HTML template
+#     html_content = render_to_string('receipt.html', context)
+
+#     # Convert HTML to PDF using WeasyPrint
+#     pdf_file = HTML(string=html_content).write_pdf()
+
+#     pdf_file = HTML(string=html_content).write_pdf()
+
+#     # Use tempfile to create a temporary file
+#     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
+#         temp_pdf.write(pdf_file)
+#         temp_pdf_path = temp_pdf.name
+
+#     # Send the PDF to the printer
+#     printer_name = "EPSON L3210 Series"
+#     printer_handle = win32print.OpenPrinter(printer_name)
+
+#     # Open the file to print
+#     with open(temp_pdf_path, 'rb') as f:
+#         pdf_data = f.read()
+
+#     # Use win32print to print the file
+#     win32print.StartDocPrinter(printer_handle, 1, ("Invoice", None, "RAW"))
+#     win32print.StartPagePrinter(printer_handle)
+#     win32print.WritePrinter(printer_handle, pdf_data)
+#     win32print.EndPagePrinter(printer_handle)
+#     win32print.EndDocPrinter(printer_handle)
+#     win32print.ClosePrinter(printer_handle)
+
+#     return HttpResponse("Invoice printed successfully")
+
+
+
+
+import os
+import tempfile
+from weasyprint import HTML
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+import win32print
+import os
+import subprocess
+import tempfile
+import win32print
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
+from weasyprint import HTML
+
 @login_required(login_url='SignIn')
-def print_receipt(request, order_id):
+def print_invoice(request, order_id):
     order = get_object_or_404(Order, id=order_id)
-    items = order.items.all()
-    total_price = sum(item.get_total_price() for item in items)
     rest_details = RestaurantDetails.objects.all().last()
+    items = order.items.all()
+
+    total_price = sum(item.get_total_price() for item in items)
+    vat_rate = 0.05  # 5% VAT
+    vat_amount = round(total_price * vat_rate, 2)
+    grand_total = round(total_price + vat_amount, 2)
+
+    # Create the invoice in HTML format
+    receipt_html = f"""
+    <h2>{rest_details.Name_of_restaurant}</h2>
+    <p>{rest_details.location}</p>
+    <p><strong>Tel:</strong> {rest_details.phone}</p>
+    <p><strong>TRN:</strong> {rest_details.TRN}</p>
+
+    <h3>TAX INVOICE</h3>
+    <p><strong>Bill#:</strong> {order.id}</p>
+    <p><strong>Date:</strong> {order.create_date}</p>
+    <p><strong>Table No:</strong> Takeaway</p>
+
+    <hr>
+    <table width='100%' border='1' cellspacing='0' cellpadding='5'>
+        <tr>
+            <th>Description</th>
+            <th>Qty</th>
+            <th>Amount</th>
+        </tr>
+    """
+
+    for item in items:
+        receipt_html += f"""
+        <tr>
+            <td>{item.menu_item.name}</td>
+            <td>{item.quantity}</td>
+            <td>DHS {item.get_total_price():.2f}</td>
+        </tr>
+        """
+
+    receipt_html += f"""
+    </table>
+    <hr>
+    <p><strong>Total:</strong> DHS {total_price:.2f}</p>
+    <p><strong>VAT (5%):</strong> DHS {vat_amount:.2f}</p>
+    <p><strong>Grand Total:</strong> DHS {grand_total:.2f}</p>
+
+    <p><strong>Payment Method:</strong> {order.payment_status}</p>
+    <p><strong>Amount Paid:</strong> DHS {order.total_price}</p>
+
+    <p><strong>Cashier Name:</strong> admin</p>
+    <p>*** THANK YOU, COME AGAIN ***</p>
+    """
+
+    # Generate PDF
+    pdf_file = HTML(string=receipt_html).write_pdf()
+
+    # Save to a temporary file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
+        temp_pdf.write(pdf_file)
+        temp_pdf_path = temp_pdf.name
 
     try:
-        # Replace with your printer's actual Vendor ID and Product ID
-        printer = Usb(0x04b8, 0x0202)  # Example values
+        # Use Adobe Acrobat Reader (Modify this path if needed)
+        acrobat_path = r"C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe"
         
-        # Print Header
-        printer.textln("Receipt".center(32))  # Adjust width (32) to match printer's max line width
-        printer.textln(f"Order: {order.id}".center(32))
-        printer.textln("\n")
+        if not os.path.exists(acrobat_path):
+            return HttpResponse("Adobe Acrobat Reader not found", status=500)
+
+        # Print using Adobe Acrobat silently
+        subprocess.run([acrobat_path, "/p", "/h", temp_pdf_path], check=True)
         
-        # Print Items
-        for item in items:
-            printer.textln(f"{item.menu_item.name[:15]:15} {item.quantity:3} {item.get_total_price():>7}")
+        return HttpResponse("Invoice sent to printer successfully")
 
-        # Print Footer
-        printer.textln("\n--------------------------\n")
-        printer.textln(f"Total: DHS {round(total_price, 2):.2f}".rjust(32))
-        printer.textln("\nThank you for your order!\n")
-        printer.cut()
-        printer.close()
-
-        return JsonResponse({"status": "success", "message": "Receipt printed successfully!"})
     except Exception as e:
-        return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
+        return HttpResponse(f"Printer error: {str(e)}", status=500)
+
+    finally:
+        # Clean up temp file
+        if os.path.exists(temp_pdf_path):
+            os.remove(temp_pdf_path)
+
+
+# @login_required(login_url='SignIn')
+# def print_invoice(request, order_id):
+#     order = get_object_or_404(Order, id=order_id)
+#     rest_details = RestaurantDetails.objects.all().last()
+#     items = order.items.all()
+#     total_price = sum(item.get_total_price() for item in items)
+#     context = {
+#         'order': order,
+#         'item': items,
+#         'total_price': round(total_price, 2),
+#         "rest_details": rest_details
+#     }
+
+#     # Render the HTML template
+#     html_content = render_to_string('receipt.html', context)
+
+#     # Convert HTML to PDF using WeasyPrint
+#     pdf_file = HTML(string=html_content).write_pdf()
+
+#     # Use tempfile to create a temporary file
+#     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
+#         temp_pdf.write(pdf_file)
+#         temp_pdf_path = temp_pdf.name
+
+#     # Use Adobe Acrobat Reader or SumatraPDF to send the PDF to the printer
+#     printer_name = "EPSON L3210 Series"  # Replace with your printer's name
+    
+#     # Set the PDF application you want to use to print
+#     # For Adobe Acrobat Reader (if installed):
+#     os.system(f'"C:\\Program Files\\Adobe\\Acrobat Reader DC\\Acrobat\\Acrobat.exe" /t "{temp_pdf_path}" "{printer_name}"')
+    
+#     # For SumatraPDF (if installed):
+#     # os.system(f'"C:\\Program Files\\SumatraPDF\\SumatraPDF.exe" -print-to "{printer_name}" "{temp_pdf_path}"')
+
+#     return HttpResponse("Invoice printed successfully")
+
+
 
 
 @login_required(login_url='SignIn')

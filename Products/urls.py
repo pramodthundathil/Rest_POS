@@ -29,7 +29,7 @@ urlpatterns = [
     path("Delete_menuitem/<int:pk>",views.Delete_menuitem,name="Delete_menuitem"),
     path("TakeOrder/<int:pk>",views.TakeOrder,name="TakeOrder"),
     path('receipt/<int:order_id>/', views.receipt_view, name='receipt'),
-    path('print_receipt/<int:order_id>/', views.print_receipt, name='print_receipt'),
+    path('print_invoice/<int:order_id>/', views.print_invoice, name='print_invoice'),
     path("add_items_to_order/<int:pk>/<int:id>",views.add_items_to_order,name="add_items_to_order"),
     path("add_on_to_item/<int:pk>/<int:id>",views.add_on_to_item,name="add_on_to_item"),
 

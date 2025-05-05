@@ -53,6 +53,8 @@
                                 <td>
                                     {% if t.Table_number == 100 %}
                                     TakeAway
+                                    {% elif  t.Table_number == 101 %}
+                                    Home Delivery
                                     {% else %}
                                 {{t.Table_number}}</td>
                                 {% endif %}

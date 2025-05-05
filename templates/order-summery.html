@@ -201,6 +201,35 @@
     </div>
 </div>
 
+
+<!-- Vehicle Number Modal -->
+<div class="modal fade" id="deliveryBoyModal" tabindex="-1" role="dialog" aria-labelledby="vehicleNumberModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="vehicleNumberModalLabel">Delivery Boy Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <select name="dboy" class="form-control" id="deliveryInput">
+                    <option value="" selected disabled>----------------------</option>
+                    {% for use in users %}
+                    <option value="{{use.id}}">{{use.first_name}}</option>
+
+                    {% endfor%}
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="submitDeliveryBoy">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     function printReceipt(orderId) {
         var printWindow = window.open('/Products/receipt/' + orderId, '_blank');
@@ -209,6 +238,8 @@
         };
     }
 </script>
+
+<!-- Keep your existing HTML structure, but replace the JavaScript section at the bottom -->
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
@@ -219,8 +250,13 @@
             var tableNumber = "{{ order.table.Table_number }}"; // Ensure table number is available in the order object
 
             if (tableNumber == 100) {
+                // Show vehicle number modal and wait for user input
                 $('#vehicleNumberModal').modal('show');
+            } else if (tableNumber == 101) {
+                // Show delivery boy modal and wait for user input
+                $('#deliveryBoyModal').modal('show'); 
             } else {
+                // For regular tables, proceed directly
                 takeOrder();
             }
         });
@@ -229,47 +265,90 @@
         $("#submitVehicleNumber").on("click", function () {
             var vehicleNumber = $("#vehicleNumberInput").val();
             if (vehicleNumber) {
-                takeOrder(vehicleNumber);
+                // Call takeOrder with the vehicle number
+                takeOrder(vehicleNumber, null);
                 $('#vehicleNumberModal').modal('hide');
             } else {
-                alert("Please enter the vehicle number.");
+                alert("Please enter Vehicle number.");
+            }
+        });
+
+        // Event listener for Delivery Boy submit button
+        $("#submitDeliveryBoy").on("click", function () {
+            var delivery_boy = $("#deliveryInput").val();
+            if (delivery_boy) {
+                // Call takeOrder with the delivery boy ID
+                takeOrder(null, delivery_boy);
+                $('#deliveryBoyModal').modal('hide');
+            } else {
+                alert("Please select a delivery boy.");
             }
         });
 
         // AJAX request to place the order
-        function takeOrder(vehicleNumber = null) {
+        function takeOrder(vehicleNumber = null, delivery_boy = null) {
             var data = {
                 'order_id': "{{ order.id }}",
-
+                'csrfmiddlewaretoken': '{{ csrf_token }}'  // Include CSRF token
             };
+            
+            // Only add these parameters if they have values
             if (vehicleNumber) {
                 data['vehicle_number'] = vehicleNumber;
             }
+            
+            if (delivery_boy) {
+                data['dboy'] = delivery_boy;
+            }
 
-            console.log("Sending AJAX request with data:", data); // Debugging information
+            console.log("Sending AJAX request with data:", data);
 
             $.ajax({
                 url: "{% url 'TakeOrder' order.id %}",
                 type: "POST",
                 data: data,
                 success: function (response) {
-
-                    window.location.href = "{%url 'Pos'%}";
-                    // alert("Order placed successfully!");
                     console.log("Order placed successfully:", response);
-                    // Debugging information
+                    window.location.href = "{% url 'Pos' %}";
                 },
                 error: function (xhr, errmsg, err) {
-                    console.error("Error placing order:", xhr.status, xhr.responseText); // Debugging information
+                    alert("Error placing order. Please try again.");
+                    console.error("Error placing order:", xhr.status, xhr.responseText);
+                }
+            });
+        }
+        
+        // Quantity adjustment handlers
+        $(".btn-increase").on("click", function() {
+            var itemId = $(this).data("item-id");
+            updateQuantity(itemId, 1);
+        });
+        
+        $(".btn-decrease").on("click", function() {
+            var itemId = $(this).data("item-id");
+            updateQuantity(itemId, -1);
+        });
+        
+        function updateQuantity(itemId, change) {
+            $.ajax({
+                url: "/update-quantity/", // Create this endpoint in Django
+                type: "POST",
+                data: {
+                    'item_id': itemId,
+                    'change': change,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    location.reload(); // Reload to see updated quantities
                 }
             });
         }
     });
-</script>
-<script>
+
     function submitAddExtrasForm(itemId) {
         var form = document.getElementById('addExtrasForm' + itemId);
         var formData = new FormData(form);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
         $.ajax({
             url: form.action,
@@ -278,14 +357,13 @@
             processData: false,
             contentType: false,
             success: function (response) {
-                // Handle success, e.g., close modal, show success message, update the page dynamically
                 console.log('Form submitted successfully:', response);
                 $('#exampleModalScrollable' + itemId).modal('hide');
-                location.reload(); // Reload the page to reflect changes, or update the DOM dynamically
+                location.reload();
             },
             error: function (xhr, errmsg, err) {
-                // Handle error
                 console.error('Error submitting form:', xhr.status, xhr.responseText);
+                alert("Error adding extras. Please try again.");
             }
         });
     }
