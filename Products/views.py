@@ -607,101 +607,102 @@ from weasyprint import HTML
 
 import os
 import tempfile
-from weasyprint import HTML
+# from weasyprint import HTML
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-import win32print
+
 import os
-import subprocess
+# import subprocess
 import tempfile
-import win32print
+# import win32print
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
-from weasyprint import HTML
+# from weasyprint import HTML
 
 @login_required(login_url='SignIn')
 def print_invoice(request, order_id):
-    order = get_object_or_404(Order, id=order_id)
-    rest_details = RestaurantDetails.objects.all().last()
-    items = order.items.all()
+    # order = get_object_or_404(Order, id=order_id)
+    # rest_details = RestaurantDetails.objects.all().last()
+    # items = order.items.all()
 
-    total_price = sum(item.get_total_price() for item in items)
-    vat_rate = 0.05  # 5% VAT
-    vat_amount = round(total_price * vat_rate, 2)
-    grand_total = round(total_price + vat_amount, 2)
+    # total_price = sum(item.get_total_price() for item in items)
+    # vat_rate = 0.05  # 5% VAT
+    # vat_amount = round(total_price * vat_rate, 2)
+    # grand_total = round(total_price + vat_amount, 2)
 
-    # Create the invoice in HTML format
-    receipt_html = f"""
-    <h2>{rest_details.Name_of_restaurant}</h2>
-    <p>{rest_details.location}</p>
-    <p><strong>Tel:</strong> {rest_details.phone}</p>
-    <p><strong>TRN:</strong> {rest_details.TRN}</p>
+    # # Create the invoice in HTML format
+    # receipt_html = f"""
+    # <h2>{rest_details.Name_of_restaurant}</h2>
+    # <p>{rest_details.location}</p>
+    # <p><strong>Tel:</strong> {rest_details.phone}</p>
+    # <p><strong>TRN:</strong> {rest_details.TRN}</p>
 
-    <h3>TAX INVOICE</h3>
-    <p><strong>Bill#:</strong> {order.id}</p>
-    <p><strong>Date:</strong> {order.create_date}</p>
-    <p><strong>Table No:</strong> Takeaway</p>
+    # <h3>TAX INVOICE</h3>
+    # <p><strong>Bill#:</strong> {order.id}</p>
+    # <p><strong>Date:</strong> {order.create_date}</p>
+    # <p><strong>Table No:</strong> Takeaway</p>
 
-    <hr>
-    <table width='100%' border='1' cellspacing='0' cellpadding='5'>
-        <tr>
-            <th>Description</th>
-            <th>Qty</th>
-            <th>Amount</th>
-        </tr>
-    """
+    # <hr>
+    # <table width='100%' border='1' cellspacing='0' cellpadding='5'>
+    #     <tr>
+    #         <th>Description</th>
+    #         <th>Qty</th>
+    #         <th>Amount</th>
+    #     </tr>
+    # """
 
-    for item in items:
-        receipt_html += f"""
-        <tr>
-            <td>{item.menu_item.name}</td>
-            <td>{item.quantity}</td>
-            <td>DHS {item.get_total_price():.2f}</td>
-        </tr>
-        """
+    # for item in items:
+    #     receipt_html += f"""
+    #     <tr>
+    #         <td>{item.menu_item.name}</td>
+    #         <td>{item.quantity}</td>
+    #         <td>DHS {item.get_total_price():.2f}</td>
+    #     </tr>
+    #     """
 
-    receipt_html += f"""
-    </table>
-    <hr>
-    <p><strong>Total:</strong> DHS {total_price:.2f}</p>
-    <p><strong>VAT (5%):</strong> DHS {vat_amount:.2f}</p>
-    <p><strong>Grand Total:</strong> DHS {grand_total:.2f}</p>
+    # receipt_html += f"""
+    # </table>
+    # <hr>
+    # <p><strong>Total:</strong> DHS {total_price:.2f}</p>
+    # <p><strong>VAT (5%):</strong> DHS {vat_amount:.2f}</p>
+    # <p><strong>Grand Total:</strong> DHS {grand_total:.2f}</p>
 
-    <p><strong>Payment Method:</strong> {order.payment_status}</p>
-    <p><strong>Amount Paid:</strong> DHS {order.total_price}</p>
+    # <p><strong>Payment Method:</strong> {order.payment_status}</p>
+    # <p><strong>Amount Paid:</strong> DHS {order.total_price}</p>
 
-    <p><strong>Cashier Name:</strong> admin</p>
-    <p>*** THANK YOU, COME AGAIN ***</p>
-    """
+    # <p><strong>Cashier Name:</strong> admin</p>
+    # <p>*** THANK YOU, COME AGAIN ***</p>
+    # """
 
-    # Generate PDF
-    pdf_file = HTML(string=receipt_html).write_pdf()
+    # # Generate PDF
+    # pdf_file = HTML(string=receipt_html).write_pdf()
 
-    # Save to a temporary file
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
-        temp_pdf.write(pdf_file)
-        temp_pdf_path = temp_pdf.name
+    # # Save to a temporary file
+    # with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
+    #     temp_pdf.write(pdf_file)
+    #     temp_pdf_path = temp_pdf.name
 
-    try:
-        # Use Adobe Acrobat Reader (Modify this path if needed)
-        acrobat_path = r"C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe"
+    # try:
+    #     # Use Adobe Acrobat Reader (Modify this path if needed)
+    #     acrobat_path = r"C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe"
         
-        if not os.path.exists(acrobat_path):
-            return HttpResponse("Adobe Acrobat Reader not found", status=500)
+    #     if not os.path.exists(acrobat_path):
+    #         return HttpResponse("Adobe Acrobat Reader not found", status=500)
 
-        # Print using Adobe Acrobat silently
-        subprocess.run([acrobat_path, "/p", "/h", temp_pdf_path], check=True)
+    #     # Print using Adobe Acrobat silently
+    #     subprocess.run([acrobat_path, "/p", "/h", temp_pdf_path], check=True)
         
-        return HttpResponse("Invoice sent to printer successfully")
+    #     return HttpResponse("Invoice sent to printer successfully")
 
-    except Exception as e:
-        return HttpResponse(f"Printer error: {str(e)}", status=500)
+    # except Exception as e:
+    #     return HttpResponse(f"Printer error: {str(e)}", status=500)
 
-    finally:
-        # Clean up temp file
-        if os.path.exists(temp_pdf_path):
-            os.remove(temp_pdf_path)
+    # finally:
+    #     # Clean up temp file
+    #     if os.path.exists(temp_pdf_path):
+    #         os.remove(temp_pdf_path)
+    return redirect("Pos")
 
 
 # @login_required(login_url='SignIn')
