@@ -8,6 +8,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("",include("Home.urls")),
     path("Products/",include('Products.urls')),
+    path("Finance/",include('Finance.urls')),
   
    
     

@@ -38,7 +38,7 @@ def admin_only(view_func):
             return redirect('Pos')
         
         if group == 'admin':
-            return view_func(request, *args, **kwargs)
+            return redirect("Index")
         
         if group == 'kitchen':
             return redirect('KitchenDashboard')

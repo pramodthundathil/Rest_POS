@@ -12,6 +12,8 @@ from Home.decorators import admin_only, allowed_users
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from .forms import RestaurantDetailsForm
+
+from Finance.models import Income, Expence
 # Create your views here.
 
 @login_required(login_url='SignIn')
@@ -970,6 +972,8 @@ def SettleOrder(request, pk):
             order.payment_method = payment
             order.payment_status = 'Paid'
             order.save()
+            income = Income.objects.create(perticulers = f"payment Order number #{order.id} by {payment}", amount = total_price )
+            income.save()
             messages.info(request, "Bill Settled....")
 
         except:
