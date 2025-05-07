@@ -1,3 +1,4 @@
+{% load static %}
 {% for cat in category %}
                 <div class="card card-block card-stretch card-height-helf"
                     style="box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;" data-toggle="modal"
@@ -9,7 +10,15 @@
                                 <p class="mb-0">Items : {{cat.items.all | length}}</p>
                             </div>
                             <div class="">
-                                <img src="{{cat.image.url}}" style="width:100px" height="100px" alt="">
+                                
+
+                                {% if cat.image %}
+                                                        <img src="{{cat.image.url}}" style="width:100px" height="120px"
+                                                            alt="">
+                                                            {% else %}
+                                                            <img src="{%static 'assets\images\food.png' %}" style="width:100px" height="120px"
+                                                            alt="">
+                                                            {% endif %}
                             </div>
 
                         </div>
@@ -48,8 +57,15 @@
                                                         <span class="text-info">Potion: {{m.potion}}</span>
                                                     </div>
                                                     <div class="">
+                                                        {% if m.image %}
                                                         <img src="{{m.image.url}}" style="width:100px" height="120px"
                                                             alt="">
+                                                            {% else %}
+                                                            <img src="{%static 'assets\images\food.png' %}" style="width:100px" height="120px"
+                                                            alt="">
+                                                            {% endif %}
+
+                                                            
                                                     </div>
 
                                                 </div>
@@ -75,8 +91,13 @@
 
                                                     </div>
                                                     <div class="">
+                                                        {% if m.image %}
                                                         <img src="{{m.image.url}}" style="width:100px" height="120px"
                                                             alt="">
+                                                            {% else %}
+                                                            <img src="{%static 'assets\images\food.png' %}" style="width:100px" height="120px"
+                                                            alt="">
+                                                            {% endif %}
                                                     </div>
 
                                                 </div>
@@ -99,8 +120,13 @@
                                                         <span class="text-info">Portion: {{m.potion}}</span>
                                                     </div>
                                                     <div class="">
+                                                        {% if m.image %}
                                                         <img src="{{m.image.url}}" style="width:100px" height="120px"
                                                             alt="">
+                                                            {% else %}
+                                                            <img src="{%static 'assets\images\food.png' %}" style="width:100px" height="120px"
+                                                            alt="">
+                                                            {% endif %}
                                                     </div>
 
                                                 </div>

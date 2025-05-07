@@ -1,6 +1,8 @@
 {%extends 'index.html' %}
 {% block content %}
 
+{% load static %}
+
 <div class="content-page">
     <div class="container-fluid">
         <div class="row">
@@ -48,8 +50,14 @@
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">
+                                        {% if item.image %}
                                         <img src="{{item.image.url}}" class="img-fluid rounded avatar-50 mr-3"
                                             alt="image">
+                                            {% else %}
+
+                                            <img src="{%static 'assets\images\food.png' %}" class="img-fluid rounded avatar-50 mr-3"
+                                            alt="image">
+                                            {% endif %}
 
                                     </div>
                                 </td>

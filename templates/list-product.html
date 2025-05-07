@@ -1,5 +1,7 @@
 {% extends 'index.html' %}
 {% block  content %}
+
+{% load static %}
 <style>
     .m-status-false{
         opacity: .3;
@@ -63,8 +65,15 @@
                                 </td>
                                 <td class="m-status-false">
                                     <div class="d-flex align-items-center">
+                                        {% if m.image %}
                                         <img src="{{m.image.url}}"
                                             class="img-fluid rounded avatar-50 mr-3" alt="image">
+
+                                            {% else %}
+
+                                            <img src="{%static 'assets\images\food.png' %}" class="img-fluid rounded avatar-50 mr-3"
+                                            alt="image">
+                                            {% endif %}
                                         
                                     </div>
                                 </td>

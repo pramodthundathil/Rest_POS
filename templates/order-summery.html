@@ -58,7 +58,7 @@
 </style>
 
 
-
+{% load static %}
 
 
 <div class="card-header d-flex justify-content-between">
@@ -84,7 +84,12 @@
             {% for i in item %}
             <tr>
                 <td>
+                    {% if i.menu_item.image %}
                     <img src="{{i.menu_item.image.url}}" id="menuimage" style="width:60px;height: 60px;" alt="">
+                    {% else %}
+                    <img src="{%static 'assets/images/food.png' %}" id="menuimage" style="width:60px;height: 60px;" alt="">
+
+                    {% endif %}
                     {{i.menu_item.name}}
                     <span style="font-size: x-small; color: gary;">(Add: {{i.special_instructions}}
                         {% for x in i.add_ons.all %}
