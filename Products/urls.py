@@ -67,10 +67,5 @@ urlpatterns = [
     path("delete_table/<int:pk>", views.delete_table, name="delete_table"),
     path("edit_add_on/<int:pk>", views.edit_add_on, name="edit_add_on"),
     path("delete_add_on/<int:pk>", views.delete_add_on, name="delete_add_on"),
-
-
-
-
-
-    
+    path("Bulk_Upload_Product", views.Bulk_Upload_Product, name="Bulk_Upload_Product"),
 ]    

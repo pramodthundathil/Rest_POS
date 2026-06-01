@@ -1246,3 +1246,142 @@ def delete_add_on(request, pk):
     messages.success(request, "Add-on deleted successfully.")
     return redirect('list_add_ons')
 
+
+import uuid
+import openpyxl
+
+@login_required(login_url='SignIn')
+def Bulk_Upload_Product(request):
+    if request.method == "POST":
+        excel_file = request.FILES.get('excel_file')
+        if not excel_file:
+            messages.error(request, "Please select an Excel file to upload.")
+            return redirect("Bulk_Upload_Product")
+        
+        if not excel_file.name.endswith(('.xlsx', '.xls')):
+            messages.error(request, "Invalid file format. Please upload an Excel (.xlsx or .xls) file.")
+            return redirect("Bulk_Upload_Product")
+
+        try:
+            wb = openpyxl.load_workbook(excel_file, data_only=True)
+            sheet = wb.active
+            
+            # Read header row
+            headers = [cell.value for cell in sheet[1]]
+            required_headers = ['Item Name', 'Menu', 'Category', 'Variation', 'Sale Price']
+            
+            # Check for missing headers (case-insensitive)
+            header_map = {}
+            for req in required_headers:
+                found = False
+                for idx, h in enumerate(headers):
+                    if h and str(h).strip().lower() == req.lower():
+                        header_map[req] = idx
+                        found = True
+                        break
+                if not found:
+                    messages.error(request, f"Missing required column: '{req}'")
+                    return redirect("Bulk_Upload_Product")
+
+            categories_created = 0
+            items_created = 0
+            items_updated = 0
+
+            # Iterate through rows starting from row 2
+            for row_idx in range(2, sheet.max_row + 1):
+                row = [sheet.cell(row=row_idx, column=col_idx).value for col_idx in range(1, len(headers) + 1)]
+                
+                # Check if row is completely empty
+                if not any(row):
+                    continue
+
+                item_name = str(row[header_map['Item Name']]).strip() if row[header_map['Item Name']] is not None else ""
+                menu_name = str(row[header_map['Menu']]).strip() if row[header_map['Menu']] is not None else ""
+                category_name = str(row[header_map['Category']]).strip() if row[header_map['Category']] is not None else ""
+                variation_val = row[header_map['Variation']]
+                sale_price_val = row[header_map['Sale Price']]
+
+                if not item_name:
+                    continue
+
+                # Get or create FoodCategory
+                if not category_name:
+                    category_name = "UNCATEGORIZED"
+                
+                category, created = FoodCategory.objects.get_or_create(
+                    name=category_name,
+                    defaults={'active': True}
+                )
+                if created:
+                    categories_created += 1
+
+                # Map variation to portion choice (0 -> Small, 1 -> Medium, 2 -> Large)
+                portion_map = {
+                    0: "Small",
+                    1: "Medium",
+                    2: "Large",
+                    "0": "Small",
+                    "1": "Medium",
+                    "2": "Large",
+                }
+                
+                # Normalize variation value
+                if isinstance(variation_val, (int, float)):
+                    variation_val = int(variation_val)
+                elif isinstance(variation_val, str):
+                    variation_val = variation_val.strip()
+                    
+                portion = portion_map.get(variation_val, "Small")
+
+                # Parse sale price
+                price = 0.0
+                if sale_price_val is not None:
+                    if isinstance(sale_price_val, (int, float)):
+                        price = float(sale_price_val)
+                    else:
+                        price_str = "".join([c for c in str(sale_price_val) if c.isdigit() or c == '.'])
+                        try:
+                            price = float(price_str)
+                        except ValueError:
+                            price = 0.0
+
+                # Check if Menu item already exists with same name, category, and portion
+                menu_item = Menu.objects.filter(name=item_name, category=category, potion=portion).first()
+                if menu_item:
+                    # Update price
+                    menu_item.price = price
+                    menu_item.save()
+                    items_updated += 1
+                else:
+                    # Create new Menu item
+                    code = str(uuid.uuid4().hex[:6]).upper()
+                    while Menu.objects.filter(code=code).exists():
+                        code = str(uuid.uuid4().hex[:6]).upper()
+
+                    Menu.objects.create(
+                        name=item_name,
+                        category=category,
+                        potion=portion,
+                        price=price,
+                        code=code,
+                        diet="Veg",
+                        stock=100,
+                        status=True
+                    )
+                    items_created += 1
+
+            messages.success(
+                request,
+                f"Excel import completed! "
+                f"Categories created: {categories_created}. "
+                f"Items created: {items_created}. "
+                f"Items updated: {items_updated}."
+            )
+            return redirect("List_Product")
+
+        except Exception as e:
+            messages.error(request, f"Error processing file: {str(e)}")
+            return redirect("Bulk_Upload_Product")
+
+    return render(request, "bulk-upload.html")
+

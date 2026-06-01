@@ -32,7 +32,11 @@
                             {% csrf_token %}
                             <div class="form-group">
                                 <div class="crm-profile-img-edit position-relative">
+                                    {% if menu.image %}
                                     <img class="rounded" src="{{ menu.image.url }}" alt="image" style="width:80%;height: auto;">
+                                    {% else %}
+                                    <img class="rounded" src="{%static 'assets/images/food.png' %}" alt="image" style="width:80%;height: auto;">
+                                    {% endif %}
                                     <div class="crm-p-image bg-primary">
                                         <i class="las la-pen upload-button"></i>
                                         <input class="file-upload" name="image" type="file" accept="image/*">
@@ -99,7 +103,11 @@
                                 <div class="form-group col-md-6">
                                     <label for="tax_value">Tax Value</label>
                                     <select name="tax_value" class="selectpicker form-control" required data-style="py-0" onchange="calculateTax()">
+                                        {% if menu.tax_value %}
                                         <option selected value="{{ menu.tax_value.id }}">{{ menu.tax_value.tax_percentage }}%</option>
+                                        {% else %}
+                                        <option selected disabled value="">Select Tax</option>
+                                        {% endif %}
                                         {% for tax in taxes %}
                                             <option value="{{ tax.id }}">{{ tax.tax_percentage }}%</option>
                                         {% endfor %}

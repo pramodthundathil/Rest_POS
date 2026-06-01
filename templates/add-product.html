@@ -1,4 +1,5 @@
 {% extends 'index.html' %}
+{% load static %}
 {% block content %}
 
 <style>
@@ -52,7 +53,14 @@
                                             <select name="category" class="selectpicker form-control" data-style="py-0" required>
                                                 <option selected disabled>Select Category</option>
                                                 {% for i in food_category%}
-                                                <option value="{{i.id}}"><img src="{{i.image.url}}" width="50px" height="50px" alt="">{{i}}</option>
+                                                <option value="{{i.id}}">
+                                                    {% if i.image %}
+                                                    <img src="{{i.image.url}}" width="50px" height="50px" alt="">
+                                                    {% else %}
+                                                    <img src="{%static 'assets/images/food.png' %}" width="50px" height="50px" alt="">
+                                                    {% endif %}
+                                                    {{i}}
+                                                </option>
                                                 {% endfor %}
                                             </select>
                                         </div>

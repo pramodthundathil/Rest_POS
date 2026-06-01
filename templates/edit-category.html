@@ -33,7 +33,11 @@
                             {% csrf_token %}
                             <div class="form-group">
                                 <div class="crm-profile-img-edit position-relative">
+                                    {% if cat.image %}
                                     <img class="rounded" src="{{ cat.image.url }}" alt="image" style="width:80%;height: auto;">
+                                    {% else %}
+                                    <img class="rounded" src="{%static 'assets/images/food.png' %}" alt="image" style="width:80%;height: auto;">
+                                    {% endif %}
                                     <div class="crm-p-image bg-primary">
                                         <i class="las la-pen upload-button"></i>
                                         <input class="file-upload" name="image" type="file" accept="image/*">

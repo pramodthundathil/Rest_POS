@@ -18,8 +18,8 @@ class AddOns(models.Model):
 
 
 class FoodCategory(models.Model):
-    name = models.CharField(max_length=20)
-    image = models.FileField(upload_to='category_images')
+    name = models.CharField(max_length=255)
+    image = models.FileField(upload_to='category_images', default='category_images/food.png', null=True, blank=True)
     date_added = models.DateField(auto_now_add=True)
     active = models.BooleanField(default=True)
 
@@ -30,7 +30,7 @@ class FoodCategory(models.Model):
 class Menu(models.Model):
     category = models.ForeignKey('FoodCategory', on_delete=models.CASCADE, related_name="items")
     name = models.CharField(max_length=255)
-    image = models.FileField(upload_to='foodimage')
+    image = models.FileField(upload_to='foodimage', default='foodimage/food.png', null=True, blank=True)
     options = (("Quarter", "Quarter"), ("Half", "Half"), ("Full", "Full"))
     options2 = (("Small", "Small"), ("Medium", "Medium"), ("Large", "Large"))
     potion = models.CharField(max_length=255, choices=options2)  # Fixed typo from potion to portion

@@ -23,8 +23,12 @@
                         {% endfor %}
                         <p class="mb-0"></p>
                     </div>
-                    <a href="{%url 'Add_Product' %}" class="btn btn-primary add-list"><i
-                            class="las la-plus mr-3"></i>Add Menu</a>
+                    <div>
+                        <a href="{%url 'Bulk_Upload_Product' %}" class="btn btn-success add-list mr-2"><i
+                                class="las la-file-upload mr-3"></i>Bulk Upload</a>
+                        <a href="{%url 'Add_Product' %}" class="btn btn-primary add-list"><i
+                                class="las la-plus mr-3"></i>Add Menu</a>
+                    </div>
                 </div>
             </div>
             <div class="col-lg-12">
@@ -71,7 +75,7 @@
 
                                             {% else %}
 
-                                            <img src="{%static 'assets\images\food.png' %}" class="img-fluid rounded avatar-50 mr-3"
+                                            <img src="{%static 'assets/images/food.png' %}" class="img-fluid rounded avatar-50 mr-3"
                                             alt="image">
                                             {% endif %}
                                         
@@ -135,9 +139,13 @@
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">
+                                        {% if m.image %}
                                         <img src="{{m.image.url}}"
                                             class="img-fluid rounded avatar-50 mr-3" alt="image">
-                                        
+                                        {% else %}
+                                        <img src="{%static 'assets/images/food.png' %}" class="img-fluid rounded avatar-50 mr-3"
+                                            alt="image">
+                                        {% endif %}
                                     </div>
                                 </td>
                                 <td>
