@@ -2,6 +2,12 @@ from django import forms
 from .models import RestaurantDetails
 
 class RestaurantDetailsForm(forms.ModelForm):
+    default_printer = forms.ChoiceField(
+        choices=[],
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
     class Meta:
         model = RestaurantDetails
         fields = [
@@ -12,6 +18,9 @@ class RestaurantDetailsForm(forms.ModelForm):
             "mobile",
             'Address',
             'logo',
+            'printing_method',
+            'default_printer',
+            'paper_width',
         ]
         widgets = {
             'Name_of_restaurant': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Restaurant Name'}),
@@ -21,7 +30,31 @@ class RestaurantDetailsForm(forms.ModelForm):
             'mobile': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Mobile Number'}),
             'Address': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Enter Address'}),
             'logo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'printing_method': forms.Select(attrs={'class': 'form-control'}),
+            'paper_width': forms.Select(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        printer_choices = [('', '------- Select Local Printer -------')]
+        try:
+            import win32print
+            # Enum local and network printers connected to the server machine
+            connected_printers = win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)
+            for printer in connected_printers:
+                name = printer[2]
+                printer_choices.append((name, name))
+        except Exception:
+            # Fallback if win32print is not installed or not on Windows
+            pass
+        
+        # If the instance already has a default printer, ensure it is in the choices
+        if self.instance and self.instance.default_printer:
+            if not any(self.instance.default_printer == choice[0] for choice in printer_choices):
+                printer_choices.append((self.instance.default_printer, self.instance.default_printer))
+
+        self.fields['default_printer'].choices = printer_choices
+
 
 
 from django import forms

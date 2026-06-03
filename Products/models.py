@@ -170,6 +170,20 @@ class RestaurantDetails(models.Model):
     Address = models.TextField(null=True, blank=True)
     logo = models.FileField(upload_to="logo", null=True, blank=True)
 
+    # Printer Configurations
+    PRINT_CHOICES = (
+        ('CLIENT', 'Client-Side (Browser Print via iframe)'),
+        ('SERVER', 'Server-Side Direct Print (Windows win32print)'),
+    )
+    printing_method = models.CharField(max_length=10, choices=PRINT_CHOICES, default='CLIENT')
+    default_printer = models.CharField(max_length=255, null=True, blank=True)
+
+    PAPER_CHOICES = (
+        ('58mm', '2 Inch (58mm)'),
+        ('80mm', '3 Inch (80mm)'),
+        ('100mm', '4 Inch (100mm)'),
+    )
+    paper_width = models.CharField(max_length=10, choices=PAPER_CHOICES, default='80mm')
 
     def __str__(self):
         return str(self.Name_of_restaurant)

@@ -60,6 +60,26 @@
     </div>
 </div>
 
-
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const methodSelect = document.querySelector('select[name="printing_method"]');
+        const printerSelect = document.querySelector('select[name="default_printer"]');
+        
+        if (methodSelect && printerSelect) {
+            const printerContainer = printerSelect.closest('p') || printerSelect.closest('.form-group') || printerSelect.parentElement;
+            
+            function togglePrinterField() {
+                if (methodSelect.value === 'SERVER') {
+                    printerContainer.style.display = 'block';
+                } else {
+                    printerContainer.style.display = 'none';
+                }
+            }
+            
+            methodSelect.addEventListener('change', togglePrinterField);
+            togglePrinterField(); // Initial load run
+        }
+    });
+</script>
 
 {% endblock %}

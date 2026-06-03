@@ -643,6 +643,7 @@ def print_invoice(request, order_id):
             'total_price': round(total_price, 2),
             "rest_details": rest_details,
             'request': request,
+            'is_server': True,
         }
         
         # Render the template to HTML string
@@ -665,12 +666,24 @@ def print_invoice(request, order_id):
                 error_msg = res.stderr or "Unknown lp command error."
                 return JsonResponse({'status': 'error', 'message': f'Printing failed: {error_msg}'}, status=500)
         elif 'windows' in system_os:
-            # Windows: use win32api / win32print or fallback to os.startfile
+            # Windows: Use PDFtoPrinter.exe for direct, silent PDF printing
             try:
-                import win32api
                 import win32print
-                printer_name = win32print.GetDefaultPrinter()
-                win32api.ShellExecute(0, "print", temp_pdf_path, f'/d:"{printer_name}"', ".", 0)
+                printer_name = rest_details.default_printer if (rest_details and rest_details.default_printer) else win32print.GetDefaultPrinter()
+                
+                # Path to PDFtoPrinter.exe in the Django project base directory
+                from django.conf import settings
+                pdftoprinter_path = os.path.join(settings.BASE_DIR, 'PDFtoPrinter.exe')
+                
+                if os.path.exists(pdftoprinter_path):
+                    # Run PDFtoPrinter silently: PDFtoPrinter.exe <file_path> <printer_name>
+                    res = subprocess.run([pdftoprinter_path, temp_pdf_path, printer_name], capture_output=True, text=True)
+                    if res.returncode != 0:
+                        raise Exception(f"PDFtoPrinter failed with exit code {res.returncode}: {res.stderr}")
+                else:
+                    # Fallback to ShellExecute/startfile if the utility is not found
+                    import win32api
+                    win32api.ShellExecute(0, "print", temp_pdf_path, f'/d:"{printer_name}"', ".", 0)
             except Exception as win_err:
                 try:
                     os.startfile(temp_pdf_path, "print")
@@ -741,7 +754,8 @@ def receipt_view(request, order_id):
         'order': order,
         'item': items,
         'total_price': round(total_price,2),
-        "rest_details":rest_details
+        "rest_details":rest_details,
+        'is_server': False,
     }
     return render(request, 'receipt.html', context)
 
