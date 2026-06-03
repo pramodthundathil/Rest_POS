@@ -1804,5 +1804,240 @@ function getPeriodText(period) {
 </script>
             
             {% endblock %}
+            
+<!-- Custom Premium Notification Toast & Silent Printing System -->
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700&display=swap');
+    
+    @keyframes toast-spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    @keyframes toast-shrink {
+        from { transform: scaleX(1); }
+        to { transform: scaleX(0); }
+    }
+</style>
+
+<script>
+    function showPremiumToast(title, message, type = 'success', duration = 4000) {
+        let container = document.getElementById('premium-toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'premium-toast-container';
+            container.style.cssText = `
+                position: fixed;
+                top: 24px;
+                right: 24px;
+                z-index: 10000;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                pointer-events: none;
+                max-width: 380px;
+                width: 100%;
+            `;
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            pointer-events: auto;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px) saturate(190%);
+            -webkit-backdrop-filter: blur(12px) saturate(190%);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            transform: translateX(120%);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            opacity: 0;
+            position: relative;
+            overflow: hidden;
+        `;
+
+        let iconClass = 'ri-checkbox-circle-fill';
+        let iconColor = '#10B981';
+        let progressBg = 'linear-gradient(90deg, #10B981, #34D399)';
+        
+        if (type === 'error') {
+            iconClass = 'ri-error-warning-fill';
+            iconColor = '#EF4444';
+            progressBg = 'linear-gradient(90deg, #EF4444, #F87171)';
+        } else if (type === 'info') {
+            iconClass = 'ri-information-fill';
+            iconColor = '#3B82F6';
+            progressBg = 'linear-gradient(90deg, #3B82F6, #60A5FA)';
+        } else if (type === 'loading') {
+            iconClass = 'ri-loader-4-line';
+            iconColor = '#8B5CF6';
+            progressBg = 'linear-gradient(90deg, #8B5CF6, #A78BFA)';
+        }
+
+        toast.innerHTML = `
+            <div style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 36px;
+                height: 36px;
+                border-radius: 12px;
+                background: rgba(${type === 'error' ? '239,68,68' : type === 'info' ? '59,130,246' : type === 'loading' ? '139,92,246' : '16,185,129'}, 0.15);
+                flex-shrink: 0;
+            ">
+                <i class="${iconClass}" style="
+                    font-size: 20px;
+                    color: ${iconColor};
+                    display: inline-block;
+                    animation: ${type === 'loading' ? 'toast-spin 1s linear infinite' : 'none'};
+                "></i>
+            </div>
+            <div style="flex-grow: 1; margin-right: 12px;">
+                <div style="
+                    font-weight: 700;
+                    font-size: 14px;
+                    color: #1F2937;
+                    margin-bottom: 2px;
+                    font-family: 'Outfit', 'Inter', sans-serif;
+                ">${title}</div>
+                <div style="
+                    font-size: 12px;
+                    color: #4B5563;
+                    font-family: 'Inter', sans-serif;
+                    line-height: 1.4;
+                ">${message}</div>
+            </div>
+            <button style="
+                background: none;
+                border: none;
+                color: #9CA3AF;
+                cursor: pointer;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: color 0.2s;
+                margin-top: 2px;
+            " onmouseover="this.style.color='#4B5563'" onmouseout="this.style.color='#9CA3AF'" onclick="this.parentElement.style.transform='translateX(120%)'; this.parentElement.style.opacity='0'; setTimeout(()=>this.parentElement.remove(), 500)">
+                <i class="ri-close-line" style="font-size: 16px;"></i>
+            </button>
+            <div class="toast-progress" style="
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                height: 4px;
+                width: 100%;
+                background: ${progressBg};
+                transform-origin: left;
+                animation: toast-shrink ${duration}ms linear forwards;
+            "></div>
+        `;
+
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            toast.style.transform = 'translateX(0)';
+            toast.style.opacity = '1';
+        });
+
+        let dismissTimeout;
+        if (type !== 'loading') {
+            dismissTimeout = setTimeout(() => {
+                toast.style.transform = 'translateX(120%)';
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    toast.remove();
+                }, 500);
+            }, duration);
+        }
+
+        return {
+            element: toast,
+            dismiss: () => {
+                if (dismissTimeout) clearTimeout(dismissTimeout);
+                toast.style.transform = 'translateX(120%)';
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    toast.remove();
+                }, 500);
+            },
+            update: (newTitle, newMessage, newType) => {
+                if (dismissTimeout) clearTimeout(dismissTimeout);
+                
+                const iconEl = toast.querySelector('i');
+                const titleEl = toast.querySelector('div > div:first-child');
+                const descEl = toast.querySelector('div > div:last-child');
+                const progressEl = toast.querySelector('.toast-progress');
+                const iconBgEl = toast.querySelector('div');
+
+                let newIconClass = 'ri-checkbox-circle-fill';
+                let newIconColor = '#10B981';
+                let newProgressBg = 'linear-gradient(90deg, #10B981, #34D399)';
+                let bgColor = 'rgba(16,185,129,0.15)';
+
+                if (newType === 'error') {
+                    newIconClass = 'ri-error-warning-fill';
+                    newIconColor = '#EF4444';
+                    newProgressBg = 'linear-gradient(90deg, #EF4444, #F87171)';
+                    bgColor = 'rgba(239,68,68,0.15)';
+                } else if (newType === 'info') {
+                    newIconClass = 'ri-information-fill';
+                    newIconColor = '#3B82F6';
+                    newProgressBg = 'linear-gradient(90deg, #3B82F6, #60A5FA)';
+                    bgColor = 'rgba(59,130,246,0.15)';
+                }
+
+                iconBgEl.style.background = bgColor;
+                iconEl.className = newIconClass;
+                iconEl.style.color = newIconColor;
+                iconEl.style.animation = 'none';
+                titleEl.textContent = newTitle;
+                descEl.textContent = newMessage;
+                progressEl.style.background = newProgressBg;
+                progressEl.style.animation = 'toast-shrink 3000ms linear forwards';
+
+                dismissTimeout = setTimeout(() => {
+                    toast.style.transform = 'translateX(120%)';
+                    toast.style.opacity = '0';
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 500);
+                }, 3000);
+            }
+        };
+    }
+
+    function printReceipt(orderId) {
+        const toast = showPremiumToast('Printing Invoice', 'Generating PDF and sending to printer...', 'loading', 0);
+        
+        fetch('/Products/print_invoice/' + orderId + '/')
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'Server error ' + response.status);
+                    }).catch(() => {
+                        throw new Error('Server returned error ' + response.status);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    toast.update('Print Successful', data.message || 'Receipt printed successfully.', 'success');
+                } else {
+                    toast.update('Print Failed', data.message || 'Failed to print the receipt.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Print error:', error);
+                toast.update('Print Error', error.message || 'An error occurred during printing.', 'error');
+            });
+    }
+</script>
   </body>
 </html>

@@ -174,13 +174,5 @@
     });
 
 </script>
-<script>
-    function printReceipt(orderId) {
-        var printWindow = window.open('/Products/receipt/' + orderId, '_blank');
-        printWindow.onload = function () {
-            printWindow.print();
-        };
-    }
-</script>
 
 {% endblock %}

@@ -175,7 +175,7 @@
     </div>
 </div>
 <div class="d-flex flex-wrap justify-content-end align-items-center mb-3 p-3">
-    <div class="buttons p-3"><a target="_blank" href="{%url 'receipt'  order.id %}" class="btn btn-info">Print Bill</a></div>
+    <div class="buttons p-3"><a href="javascript:void(0);" onclick="printReceipt('{{ order.id }}')" class="btn btn-info">Print Bill</a></div>
     <div class="buttons p-3"><a href="javascript:void(0);" id="place-order-btn-1" class="btn btn-warning">Place
             Order</a></div>
     <!-- <div class="buttons p-3"><a href="" class="btn btn-success">Settle Bill</a></div> -->
@@ -232,17 +232,7 @@
                 <button type="button" class="btn btn-primary" id="submitDeliveryBoy">Submit</button>
             </div>
         </div>
-    </div>
 </div>
-
-<script>
-    function printReceipt(orderId) {
-        var printWindow = window.open('/Products/receipt/' + orderId, '_blank');
-        printWindow.onload = function () {
-            printWindow.print();
-        };
-    }
-</script>
 
 <!-- Keep your existing HTML structure, but replace the JavaScript section at the bottom -->
 

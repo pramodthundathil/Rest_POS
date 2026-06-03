@@ -59,7 +59,7 @@
                                     <td>{{c.payment_status}}</td>
                                     <td>
                                         <div class="d-flex align-items-center list-action">
-                                            <a target="_blank" href="{%url 'receipt'  c.order.id %}" class="btn btn-info btn-sm"> Bill </a>
+                                            <a href="javascript:void(0);" onclick="printReceipt('{{ c.order.id }}')" class="btn btn-info btn-sm"> Bill </a>
                                            
                                             <a class="badge bg-warning mr-2" data-toggle="tooltip" data-placement="top"
                                                 title="" data-original-title="Delete" onclick="return confirm('Are you sure do you want to delete?')" href="{%url 'delete_settled_order' c.id%}"><i

@@ -624,87 +624,72 @@ from django.http import HttpResponse
 
 @login_required(login_url='SignIn')
 def print_invoice(request, order_id):
-    # order = get_object_or_404(Order, id=order_id)
-    # rest_details = RestaurantDetails.objects.all().last()
-    # items = order.items.all()
-
-    # total_price = sum(item.get_total_price() for item in items)
-    # vat_rate = 0.05  # 5% VAT
-    # vat_amount = round(total_price * vat_rate, 2)
-    # grand_total = round(total_price + vat_amount, 2)
-
-    # # Create the invoice in HTML format
-    # receipt_html = f"""
-    # <h2>{rest_details.Name_of_restaurant}</h2>
-    # <p>{rest_details.location}</p>
-    # <p><strong>Tel:</strong> {rest_details.phone}</p>
-    # <p><strong>TRN:</strong> {rest_details.TRN}</p>
-
-    # <h3>TAX INVOICE</h3>
-    # <p><strong>Bill#:</strong> {order.id}</p>
-    # <p><strong>Date:</strong> {order.create_date}</p>
-    # <p><strong>Table No:</strong> Takeaway</p>
-
-    # <hr>
-    # <table width='100%' border='1' cellspacing='0' cellpadding='5'>
-    #     <tr>
-    #         <th>Description</th>
-    #         <th>Qty</th>
-    #         <th>Amount</th>
-    #     </tr>
-    # """
-
-    # for item in items:
-    #     receipt_html += f"""
-    #     <tr>
-    #         <td>{item.menu_item.name}</td>
-    #         <td>{item.quantity}</td>
-    #         <td>DHS {item.get_total_price():.2f}</td>
-    #     </tr>
-    #     """
-
-    # receipt_html += f"""
-    # </table>
-    # <hr>
-    # <p><strong>Total:</strong> DHS {total_price:.2f}</p>
-    # <p><strong>VAT (5%):</strong> DHS {vat_amount:.2f}</p>
-    # <p><strong>Grand Total:</strong> DHS {grand_total:.2f}</p>
-
-    # <p><strong>Payment Method:</strong> {order.payment_status}</p>
-    # <p><strong>Amount Paid:</strong> DHS {order.total_price}</p>
-
-    # <p><strong>Cashier Name:</strong> admin</p>
-    # <p>*** THANK YOU, COME AGAIN ***</p>
-    # """
-
-    # # Generate PDF
-    # pdf_file = HTML(string=receipt_html).write_pdf()
-
-    # # Save to a temporary file
-    # with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
-    #     temp_pdf.write(pdf_file)
-    #     temp_pdf_path = temp_pdf.name
-
-    # try:
-    #     # Use Adobe Acrobat Reader (Modify this path if needed)
-    #     acrobat_path = r"C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe"
+    import platform
+    import tempfile
+    import subprocess
+    import os
+    from xhtml2pdf import pisa
+    from django.template.loader import render_to_string
+    
+    try:
+        order = get_object_or_404(Order, id=order_id)
+        rest_details = RestaurantDetails.objects.all().last()
+        items = order.items.all()
+        total_price = sum(item.get_total_price() for item in items)
         
-    #     if not os.path.exists(acrobat_path):
-    #         return HttpResponse("Adobe Acrobat Reader not found", status=500)
-
-    #     # Print using Adobe Acrobat silently
-    #     subprocess.run([acrobat_path, "/p", "/h", temp_pdf_path], check=True)
+        context = {
+            'order': order,
+            'item': items,
+            'total_price': round(total_price, 2),
+            "rest_details": rest_details,
+            'request': request,
+        }
         
-    #     return HttpResponse("Invoice sent to printer successfully")
-
-    # except Exception as e:
-    #     return HttpResponse(f"Printer error: {str(e)}", status=500)
-
-    # finally:
-    #     # Clean up temp file
-    #     if os.path.exists(temp_pdf_path):
-    #         os.remove(temp_pdf_path)
-    return redirect("Pos")
+        # Render the template to HTML string
+        html_content = render_to_string('receipt.html', context)
+        
+        # Create temp PDF file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
+            pisa_status = pisa.CreatePDF(html_content, dest=temp_pdf)
+            temp_pdf_path = temp_pdf.name
+            
+        if pisa_status.err:
+            return JsonResponse({'status': 'error', 'message': 'Failed to compile receipt to PDF.'}, status=500)
+            
+        # Detect OS and route print job
+        system_os = platform.system().lower()
+        if 'darwin' in system_os or 'linux' in system_os:
+            # macOS or Linux: use standard lp command
+            res = subprocess.run(['lp', temp_pdf_path], capture_output=True, text=True)
+            if res.returncode != 0:
+                error_msg = res.stderr or "Unknown lp command error."
+                return JsonResponse({'status': 'error', 'message': f'Printing failed: {error_msg}'}, status=500)
+        elif 'windows' in system_os:
+            # Windows: use win32api / win32print or fallback to os.startfile
+            try:
+                import win32api
+                import win32print
+                printer_name = win32print.GetDefaultPrinter()
+                win32api.ShellExecute(0, "print", temp_pdf_path, f'/d:"{printer_name}"', ".", 0)
+            except Exception as win_err:
+                try:
+                    os.startfile(temp_pdf_path, "print")
+                except Exception as fallback_err:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': f'Windows printing failed: {str(fallback_err)} (Original error: {str(win_err)})'
+                    }, status=500)
+        else:
+            return JsonResponse({'status': 'error', 'message': f'Unsupported operating system: {system_os}'}, status=500)
+            
+        # Clean up temp file
+        if os.path.exists(temp_pdf_path):
+            os.remove(temp_pdf_path)
+            
+        return JsonResponse({'status': 'success', 'message': f'Receipt for Order #{order.token} sent to printer successfully.'})
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 
 # @login_required(login_url='SignIn')
