@@ -184,6 +184,7 @@ class RestaurantDetails(models.Model):
         ('100mm', '4 Inch (100mm)'),
     )
     paper_width = models.CharField(max_length=10, choices=PAPER_CHOICES, default='80mm')
+    print_copies = models.IntegerField(choices=[(1, '1 Copy'), (2, '2 Copies')], default=1)
 
     def __str__(self):
         return str(self.Name_of_restaurant)

@@ -21,6 +21,7 @@ class RestaurantDetailsForm(forms.ModelForm):
             'printing_method',
             'default_printer',
             'paper_width',
+            'print_copies',
         ]
         widgets = {
             'Name_of_restaurant': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Restaurant Name'}),
@@ -32,6 +33,7 @@ class RestaurantDetailsForm(forms.ModelForm):
             'logo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'printing_method': forms.Select(attrs={'class': 'form-control'}),
             'paper_width': forms.Select(attrs={'class': 'form-control'}),
+            'print_copies': forms.Select(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
