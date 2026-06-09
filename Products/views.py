@@ -692,10 +692,14 @@ def print_invoice(request, order_id):
         # Detect OS and route print job
         system_os = platform.system().lower()
         copies = rest_details.print_copies if (rest_details and rest_details.print_copies) else 1
+        
+        # If print_copies is 2, the receipt.html template renders both Customer and Store copies 
+        # on separate pages in a single PDF. Thus, we only need to print the PDF once to get both copies.
+        run_copies = 1 if copies == 2 else copies
 
         if 'darwin' in system_os or 'linux' in system_os:
-            # macOS or Linux: use standard lp command with copies count
-            res = subprocess.run(['lp', '-n', str(copies), temp_pdf_path], capture_output=True, text=True)
+            # macOS or Linux: use standard lp command with run_copies count
+            res = subprocess.run(['lp', '-n', str(run_copies), temp_pdf_path], capture_output=True, text=True)
             if res.returncode != 0:
                 error_msg = res.stderr or "Unknown lp command error."
                 return JsonResponse({'status': 'error', 'message': f'Printing failed: {error_msg}'}, status=500)
@@ -711,18 +715,18 @@ def print_invoice(request, order_id):
                 
                 if os.path.exists(pdftoprinter_path):
                     # Run PDFtoPrinter silently: PDFtoPrinter.exe <file_path> <printer_name>
-                    for _ in range(copies):
+                    for _ in range(run_copies):
                         res = subprocess.run([pdftoprinter_path, temp_pdf_path, printer_name], capture_output=True, text=True)
                         if res.returncode != 0:
                             raise Exception(f"PDFtoPrinter failed with exit code {res.returncode}: {res.stderr}")
                 else:
                     # Fallback to ShellExecute/startfile if the utility is not found
                     import win32api
-                    for _ in range(copies):
+                    for _ in range(run_copies):
                         win32api.ShellExecute(0, "print", temp_pdf_path, f'/d:"{printer_name}"', ".", 0)
             except Exception as win_err:
                 try:
-                    for _ in range(copies):
+                    for _ in range(run_copies):
                         os.startfile(temp_pdf_path, "print")
                 except Exception as fallback_err:
                     return JsonResponse({

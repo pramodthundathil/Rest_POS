@@ -9,10 +9,10 @@
         @page {
             {% if is_server %}
             size: {{ rest_details.paper_width|default:"80mm" }} 250mm;
-            margin-top: 2mm;
-            margin-bottom: 2mm;
-            margin-left: 2mm;
-            margin-right: 5mm;
+            margin-top: 0px;
+            margin-bottom: 0px;
+            margin-left: 0px;
+            margin-right: 0px;
             {% else %}
             size: {{ rest_details.paper_width|default:"80mm" }} auto;
             margin-top: 0px;
@@ -33,11 +33,7 @@
         }
 
         .print-wrapper {
-            {% if is_server %}
-            width: 100%;
-            {% else %}
             width: {{ rest_details.paper_width|default:"80mm" }};
-            {% endif %}
             margin: 0 auto;
             box-sizing: border-box;
             background-color: #fff;
@@ -45,11 +41,7 @@
 
         .bill-container {
             box-sizing: border-box;
-            {% if is_server %}
-            padding: 0;
-            {% else %}
             padding: 8px 12px;
-            {% endif %}
         }
 
         .copy-label {
