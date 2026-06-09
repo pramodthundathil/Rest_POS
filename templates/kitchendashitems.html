@@ -30,13 +30,12 @@
                         </th>
                             <th>{{i.quantity}}</th>
                             <td>
-                                {% if i.menu_item.completion_status == True %}
+                                {% if i.completion_status == True %}
                                 <span class="badge bg-success">completed</span>
                                 {% else %}
                                 <span class="badge bg-warning">Progress</span>
-                                {% endif %}
-
-                                <button data-menu-item-id ="{{i.id}}" class="btn btn-sm btn-dark finish">Finish</button></td>
+                                <button data-menu-item-id ="{{i.id}}" class="btn btn-sm btn-dark finish">Finish</button>
+                                {% endif %}</td>
                         </tr>
                         {% endfor %}
                         

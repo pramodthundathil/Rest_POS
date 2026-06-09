@@ -1,12 +1,38 @@
 {% extends 'index.html' %}
 {% block content %}
 <style>
-    .category-container{
-        max-height: 550px ;
-        overflow-y: scroll;
+    /* Hide Sidebar */
+    .iq-sidebar {
+        display: none !important;
     }
-    .category-container::-webkit-scrollbar{
+    /* Expand content page to full screen width */
+    .content-page {
+        margin-left: 0 !important;
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+        width: 100% !important;
+    }
+    /* Expand top navbar to full screen width */
+    .iq-top-navbar {
+        width: 100% !important;
+        left: 0 !important;
+    }
+    /* Touchscreen Scrollable Category List */
+    .category-container {
+        max-height: calc(100vh - 120px) !important;
+        overflow-y: auto !important;
+    }
+    .category-container::-webkit-scrollbar {
         display: none;
+    }
+    /* Active touch/click feedback for cards */
+    .card-block {
+        cursor: pointer;
+        transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .card-block:active {
+        transform: scale(0.97) !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
     }
 </style>
 
@@ -133,8 +159,49 @@
                 }
             });
         });
-    });
 
+        $(document).on("click", ".btn-save-extras", function () {
+            var itemId = $(this).data("item-id");
+            var form = document.getElementById('addExtrasForm' + itemId);
+            var formData = new FormData(form);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            $.ajax({
+                url: form.action,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    console.log('Form submitted successfully:', response);
+                    $('#exampleModalScrollable' + itemId).modal('hide');
+                    location.reload();
+                },
+                error: function (xhr, errmsg, err) {
+                    console.error('Error submitting form:', xhr.status, xhr.responseText);
+                    alert("Error adding extras. Please try again.");
+                }
+            });
+        });
+
+        // Resolve Bootstrap modal backdrop stacking context issues by moving modal to body when shown
+        $(document).on('show.bs.modal', '.modal', function () {
+            var $modal = $(this);
+            if (!$modal.data('parent')) {
+                $modal.data('parent', $modal.parent());
+            }
+            $modal.appendTo('body');
+        });
+
+        // Move modal back to its original parent when hidden to allow clean AJAX updates
+        $(document).on('hidden.bs.modal', '.modal', function () {
+            var $modal = $(this);
+            var $parent = $modal.data('parent');
+            if ($parent) {
+                $modal.appendTo($parent);
+            }
+        });
+    });
 </script>
 
 <script>

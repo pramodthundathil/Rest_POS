@@ -365,7 +365,8 @@ def OrderSingle(request,pk):
         "item":item,
         "total_price":round(total_price,2),
         "addons":addons,
-        "users":users
+        "users":users,
+        "table": Tables.objects.all(),
     }
     return render(request,"order-single.html",context)
 
@@ -422,7 +423,14 @@ def add_to_order(request):
         order.total_price = sum(item.get_total_price() for item in order.items.all())
         order.save()
         total_price = order.total_price
-        order_html = render_to_string('order-summery.html', {'order': order,"item":item,"total_price":total_price,"addons":addons,"users":users})
+        order_html = render_to_string('order-summery.html', {
+            'order': order,
+            'item': item,
+            'total_price': total_price,
+            'addons': addons,
+            'users': users,
+            'table': Tables.objects.all()
+        })
 
         return JsonResponse({'order_html': order_html})
     return JsonResponse({'error': 'Invalid request'}, status=400)
@@ -465,10 +473,19 @@ def increase_quantity(request):
         order_item.quantity += 1
         order_item.save()
         users = User.objects.filter(groups__name = "dboy")
+        addons = AddOns.objects.all()
+        table = Tables.objects.all()
 
         item = OrderItem.objects.filter(order = order_item.order)
         total_price = sum(item.get_total_price() for item in order_item.order.items.all())
-        order_html = render_to_string('order-summery.html', {'order': order_item.order, 'total_price': total_price,"item":item,"users":users})
+        order_html = render_to_string('order-summery.html', {
+            'order': order_item.order,
+            'total_price': total_price,
+            'item': item,
+            'users': users,
+            'addons': addons,
+            'table': table
+        })
 
         return JsonResponse({'order_html': order_html})
     return JsonResponse({'error': 'Invalid request'}, status=400)
@@ -476,6 +493,8 @@ def increase_quantity(request):
 @login_required(login_url='SignIn')
 def decrease_quantity(request):
     users = User.objects.filter(groups__name = "dboy")
+    addons = AddOns.objects.all()
+    table = Tables.objects.all()
     if request.method == "POST":
         item_id = request.POST.get('item_id')
         order_item = get_object_or_404(OrderItem, id=item_id)
@@ -485,7 +504,14 @@ def decrease_quantity(request):
 
         item = OrderItem.objects.filter(order = order_item.order)
         total_price = sum(item.get_total_price() for item in order_item.order.items.all())
-        order_html = render_to_string('order-summery.html', {'order': order_item.order, 'total_price': total_price,"item":item,"users":users})
+        order_html = render_to_string('order-summery.html', {
+            'order': order_item.order,
+            'total_price': total_price,
+            'item': item,
+            'users': users,
+            'addons': addons,
+            'table': table
+        })
 
         return JsonResponse({'order_html': order_html})
     return JsonResponse({'error': 'Invalid request'}, status=400)
@@ -637,6 +663,10 @@ def print_invoice(request, order_id):
         items = order.items.all()
         total_price = sum(item.get_total_price() for item in items)
         
+        import socket
+        terminal_name = socket.gethostname().split('.')[0].upper()
+        items_count = sum(item.quantity for item in items)
+        
         context = {
             'order': order,
             'item': items,
@@ -644,6 +674,8 @@ def print_invoice(request, order_id):
             "rest_details": rest_details,
             'request': request,
             'is_server': True,
+            'items_count': items_count,
+            'terminal': terminal_name,
         }
         
         # Render the template to HTML string
@@ -751,16 +783,23 @@ def print_invoice(request, order_id):
 
 @login_required(login_url='SignIn')
 def receipt_view(request, order_id):
+    import socket
     order = get_object_or_404(Order, id=order_id)
     rest_details = RestaurantDetails.objects.all().last()
     items = order.items.all()
     total_price = sum(item.get_total_price() for item in items)
+    copy_num = request.GET.get('copy')
+    terminal_name = socket.gethostname().split('.')[0].upper()
+    items_count = sum(item.quantity for item in items)
     context = {
         'order': order,
         'item': items,
         'total_price': round(total_price,2),
         "rest_details":rest_details,
         'is_server': False,
+        'copy_num': copy_num,
+        'items_count': items_count,
+        'terminal': terminal_name,
     }
     return render(request, 'receipt.html', context)
 
@@ -823,6 +862,11 @@ def refresh_order(request):
 
         })
 
+    # Recalculate counts to send back in the JSON response
+    in_progress_orders = Order.objects.filter(completion_status=False, checkout_status=False, status="In Progress")
+    pending_orders = Order.objects.filter(completion_status=False, checkout_status=False, status="Pending")
+    all_orders = Order.objects.filter(completion_status=False, checkout_status=False, status__in=["In Progress", "In Kitchen", "Pending"])
+
     context = {
         "category":category,
         "menu":menu,
@@ -832,7 +876,12 @@ def refresh_order(request):
         
     }
     table_html = render_to_string('order-datas.html', context)
-    return JsonResponse({'table_html': table_html})
+    return JsonResponse({
+        'table_html': table_html,
+        'all_orders_count': all_orders.count(),
+        'in_progress_count': in_progress_orders.count(),
+        'pending_count': pending_orders.count(),
+    })
 
 def Status_Change(request):
     if request.method == "POST":
@@ -961,8 +1010,8 @@ def SettleOrder(request, pk):
     if request.method == "POST":
         payment = request.POST.get("payment")
         order_items = OrderItem.objects.filter(order=order)
-        total_price = sum(item.menu_item.price * item.quantity for item in order_items)
-        total_tax_amount = sum(calculate_tax(item.menu_item, item.quantity) for item in order_items)
+        total_price = order.total_price
+        total_tax_amount = order.total_tax
         try:
             checkout = Checkout.objects.create(
                 order=order,
@@ -989,9 +1038,60 @@ def SettleOrder(request, pk):
     
 @allowed_users(allowed_roles=["admin"])   
 def ViewCheckouts(request):
-    checkout = Checkout.objects.all().order_by('-id')
+    import datetime
+    from django.utils import timezone
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+    
+    checkouts = Checkout.objects.all().order_by('-id')
+    
+    if start_date_str and end_date_str:
+        try:
+            start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d')
+            end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d') + datetime.timedelta(days=1) - datetime.timedelta(seconds=1)
+            from django.conf import settings
+            if settings.USE_TZ:
+                start_date = timezone.make_aware(start_date)
+                end_date = timezone.make_aware(end_date)
+            checkouts = checkouts.filter(datetime__range=(start_date, end_date))
+        except ValueError:
+            pass
+    else:
+        # Default: 2 days orders (today and yesterday)
+        today = timezone.localtime(timezone.now()).date()
+        yesterday = today - datetime.timedelta(days=1)
+        
+        start_date_dt = datetime.datetime.combine(yesterday, datetime.time.min)
+        end_date_dt = datetime.datetime.combine(today, datetime.time.max)
+        
+        from django.conf import settings
+        if settings.USE_TZ:
+            current_tz = timezone.get_current_timezone()
+            start_date = timezone.make_aware(start_date_dt, current_tz)
+            end_date = timezone.make_aware(end_date_dt, current_tz)
+        else:
+            start_date = start_date_dt
+            end_date = end_date_dt
+            
+        checkouts = checkouts.filter(datetime__range=(start_date, end_date))
+        start_date_str = yesterday.strftime('%Y-%m-%d')
+        end_date_str = today.strftime('%Y-%m-%d')
+
+    page = request.GET.get('page', 1)
+    paginator = Paginator(checkouts, 10)
+    try:
+        checkouts_page = paginator.page(page)
+    except PageNotAnInteger:
+        checkouts_page = paginator.page(1)
+    except EmptyPage:
+        checkouts_page = paginator.page(paginator.num_pages)
+
     context = {
-        "checkout":checkout
+        "checkout": checkouts_page,
+        "start_date": start_date_str,
+        "end_date": end_date_str,
     }
     return render(request,"settledorders.html",context)
 
@@ -1388,4 +1488,36 @@ def Bulk_Upload_Product(request):
             return redirect("Bulk_Upload_Product")
 
     return render(request, "bulk-upload.html")
+
+
+@login_required(login_url='SignIn')
+def change_order_table(request, pk):
+    order = get_object_or_404(Order, id=pk)
+    if request.method == "POST":
+        table_id = request.POST.get('table_id')
+        if table_id:
+            table = get_object_or_404(Tables, id=int(table_id))
+            order.table = table
+            order.save()
+            
+            # Send update through WebSocket
+            try:
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    "updates",
+                    {
+                        "type": "send_update",
+                        "message": "Database updated",
+                    }
+                )
+            except Exception as e:
+                print(f"Error sending WebSocket update: {e}")
+                
+            messages.success(request, f"Table changed to {table} successfully.")
+        
+        referer = request.META.get('HTTP_REFERER')
+        if referer:
+            return redirect(referer)
+        return redirect('Pos')
+    return redirect('Pos')
 

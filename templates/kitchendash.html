@@ -12,38 +12,70 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        var socket = new WebSocket('ws://' + window.location.host + '/ws/updates/');
+        var socket;
+        var usePolling = false;
+        var pollInterval;
 
-        socket.onmessage = function(event) {
-            var data = JSON.parse(event.data);
-            if (data.message === "Database updated") {
-                console.log("Data updated");
-                // Reload table content using AJAX
-                $.ajax({
-                    url: "{% url 'refresh_table' %}",
-                    type: "GET",
-                    success: function(response) {
-                        console.log("Response received:", response);
-                        $('#table-container').html(response.table_html);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Error:", error);
-                    }
-                });
+        function refreshTable() {
+            $.ajax({
+                url: "{% url 'refresh_table' %}",
+                type: "GET",
+                success: function(response) {
+                    console.log("Response received:", response);
+                    $('#table-container').html(response.table_html);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error:", error);
+                }
+            });
+        }
+
+        function startPolling() {
+            if (!usePolling) {
+                usePolling = true;
+                console.log("Starting polling fallback...");
+                pollInterval = setInterval(refreshTable, 5000); // Poll every 5 seconds
             }
-        };
+        }
 
-        socket.onopen = function() {
-            console.log("WebSocket connection opened.");
-        };
+        function connectWebSocket() {
+            var ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
+            var ws_path = ws_scheme + '://' + window.location.host + '/ws/updates/';
+            console.log("Connecting to WebSocket: " + ws_path);
+            
+            socket = new WebSocket(ws_path);
 
-        socket.onerror = function(error) {
-            console.error("WebSocket error:", error);
-        };
+            socket.onmessage = function(event) {
+                var data = JSON.parse(event.data);
+                if (data.message === "Database updated") {
+                    console.log("WebSocket update received");
+                    refreshTable();
+                }
+            };
 
-        socket.onclose = function(event) {
-            console.log("WebSocket connection closed:", event);
-        };
+            socket.onopen = function() {
+                console.log("WebSocket connection opened.");
+                if (pollInterval) {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                }
+                usePolling = false;
+            };
+
+            socket.onerror = function(error) {
+                console.error("WebSocket error:", error);
+                startPolling();
+            };
+
+            socket.onclose = function(event) {
+                console.log("WebSocket connection closed:", event);
+                startPolling();
+                // Attempt to reconnect after 5 seconds
+                setTimeout(connectWebSocket, 5000);
+            };
+        }
+
+        connectWebSocket();
     });
 
     

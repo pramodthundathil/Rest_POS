@@ -146,7 +146,8 @@ class OrderItem(models.Model):
         return f"{self.quantity} x {self.menu_item.name}"
 
     def get_total_price(self):
-        return self.quantity * self.price
+        addons_price = sum(addon.price for addon in self.add_ons.all())
+        return self.quantity * (self.price + addons_price)
     
 
 class Checkout(models.Model):

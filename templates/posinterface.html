@@ -79,7 +79,7 @@
 
                                 <div>
                                     <p class="mb-2">Orders</p>
-                                    <h4>{{all_orders}}</h4>
+                                    <h4 id="count-orders">{{all_orders}}</h4>
                                 </div>
                             </div>
 
@@ -93,7 +93,7 @@
 
                                 <div>
                                     <p class="mb-2">Preparing</p>
-                                    <h4>{{in_progress_count}}</h4>
+                                    <h4 id="count-preparing">{{in_progress_count}}</h4>
                                 </div>
                             </div>
 
@@ -107,7 +107,7 @@
 
                                 <div>
                                     <p class="mb-2">Pending</p>
-                                    <h4>{{pending_count}}</h4>
+                                    <h4 id="count-pending">{{pending_count}}</h4>
                                 </div>
                             </div>
 
@@ -128,8 +128,9 @@
             </div>
         </div>
         
-        
-        {% include 'order-datas.html' %}
+        <div class="row" id="order-container">
+            {% include 'order-datas.html' %}
+        </div>
    
 
     </div>
@@ -139,38 +140,79 @@
 <script>
 
     document.addEventListener("DOMContentLoaded", function () {
-        var socket = new WebSocket('ws://' + window.location.host + '/ws/updates/');
+        var socket;
+        var usePolling = false;
+        var pollInterval;
 
-        socket.onmessage = function (event) {
-            var data = JSON.parse(event.data);
-            if (data.message === "Database updated") {
-                console.log("Data updated");
-                // Reload table content using AJAX
-                $.ajax({
-                    url: "{% url 'refresh_order' %}",
-                    type: "GET",
-                    success: function (response) {
-                        console.log("Response received:", response);
-                        $('#order-list').html(response.table_html);
-                    },
-                    error: function (xhr, status, error) {
-                        console.error("Error:", error);
+        function refreshOrders() {
+            $.ajax({
+                url: "{% url 'refresh_order' %}",
+                type: "GET",
+                success: function (response) {
+                    console.log("Response received:", response);
+                    $('#order-container').html(response.table_html);
+                    if (response.all_orders_count !== undefined) {
+                        $('#count-orders').text(response.all_orders_count);
                     }
-                });
+                    if (response.in_progress_count !== undefined) {
+                        $('#count-preparing').text(response.in_progress_count);
+                    }
+                    if (response.pending_count !== undefined) {
+                        $('#count-pending').text(response.pending_count);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error:", error);
+                }
+            });
+        }
+
+        function startPolling() {
+            if (!usePolling) {
+                usePolling = true;
+                console.log("Starting polling fallback...");
+                pollInterval = setInterval(refreshOrders, 5000); // Poll every 5 seconds
             }
-        };
+        }
 
-        socket.onopen = function () {
-            console.log("WebSocket connection opened.");
-        };
+        function connectWebSocket() {
+            var ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
+            var ws_path = ws_scheme + '://' + window.location.host + '/ws/updates/';
+            console.log("Connecting to WebSocket: " + ws_path);
 
-        socket.onerror = function (error) {
-            console.error("WebSocket error:", error);
-        };
+            socket = new WebSocket(ws_path);
 
-        socket.onclose = function (event) {
-            console.log("WebSocket connection closed:", event);
-        };
+            socket.onmessage = function (event) {
+                var data = JSON.parse(event.data);
+                if (data.message === "Database updated") {
+                    console.log("WebSocket update received");
+                    refreshOrders();
+                }
+            };
+
+            socket.onopen = function () {
+                console.log("WebSocket connection opened.");
+                if (pollInterval) {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                }
+                usePolling = false;
+            };
+
+            socket.onerror = function (error) {
+                console.error("WebSocket error:", error);
+                startPolling();
+            };
+
+            socket.onclose = function (event) {
+                console.log("WebSocket connection closed:", event);
+                startPolling();
+                // Retry connection in 5 seconds
+                setTimeout(connectWebSocket, 5000);
+            };
+        }
+
+        connectWebSocket();
     });
 
 </script>
