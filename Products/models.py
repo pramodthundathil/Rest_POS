@@ -114,8 +114,7 @@ class Order(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            today = now().date()
-            last_token = Order.objects.filter(create_date__date=today).aggregate(
+            last_token = Order.objects.aggregate(
                 max_token=models.Max('token')
             )['max_token'] or 0
             self.token = last_token + 1  # Increment the token
@@ -125,7 +124,7 @@ class Order(models.Model):
     
 
     def __str__(self):
-        return f"#{self.id} -  {self.table}"
+        return f"#{self.token} -  {self.table}"
 
 
 class OrderItem(models.Model):
