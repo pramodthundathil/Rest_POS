@@ -5,7 +5,7 @@
         border: 1px solid #e2e8f0 !important;
         background: #fff;
         width: 100%;
-        max-width: 420px;
+        max-width: 100%;
         min-width: 280px;
         margin: 0 auto;
     }
@@ -34,27 +34,36 @@
         border-radius: 6px;
         font-weight: 600;
     }
+    .btn-delete-order {
+        background-color: rgba(220, 53, 69, 0.1) !important;
+        color: #dc3545 !important;
+        border: 1px solid rgba(220, 53, 69, 0.3) !important;
+    }
+    .btn-delete-order:hover {
+        background-color: #dc3545 !important;
+        color: #fff !important;
+    }
 </style>
 
 {% for order in order_details %}
 
-<div class="col-lg-4 col-md-6 mb-4">
+<div class="col-lg-6 col-md-6 mb-4">
     <div class="card pos-order-card h-100 shadow-none">
-        <div class="card-body d-flex flex-column justify-content-between p-4" style="min-height: 350px;">
+        <div class="card-body d-flex flex-column justify-content-between p-4" style="min-height: 380px;">
             <!-- Card Details -->
             <div>
                 <!-- Header: Order and Table -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0 font-weight-bold" style="color: #110A57; font-size: 1.15rem;">
+                    <h5 class="mb-0 font-weight-bold" style="color: #110A57; font-size: 1.4rem;">
                         Order #{{order.order.token}}
                     </h5>
-                    <span class="badge bg-light text-dark font-size-13" style="border: 1px solid #e2e8f0; padding: 5px 10px; border-radius: 6px; font-weight: 600;">
+                    <span class="badge bg-light text-dark" style="border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.95rem;">
                         {{order.order.table}}
                     </span>
                 </div>
 
                 <!-- Info: Time and Status -->
-                <div class="d-flex justify-content-between align-items-center mb-3" style="font-size: 0.85rem;">
+                <div class="d-flex justify-content-between align-items-center mb-3" style="font-size: 1.0rem;">
                     <div class="text-muted">
                         <i class="ri-time-line mr-1"></i> {{order.order.create_date|time:"H:i"}}
                     </div>
@@ -75,23 +84,23 @@
 
                 <!-- Middle Content -->
                 <div class="mb-3">
-                    <div class="d-flex justify-content-between mb-2" style="font-size: 0.9rem;">
+                    <div class="d-flex justify-content-between mb-2" style="font-size: 1.05rem;">
                         <span class="text-muted">Total Items:</span>
                         <span class="font-weight-bold" style="color: #2d3748;">{{order.total_items}}</span>
                     </div>
-                    <div class="d-flex justify-content-between mb-3" style="font-size: 0.9rem;">
+                    <div class="d-flex justify-content-between mb-3" style="font-size: 1.05rem;">
                         <span class="text-muted">Total Amount:</span>
-                        <span class="font-weight-bold text-primary" style="font-size: 1.05rem;">₹{{order.total_price | floatformat:2}}</span>
+                        <span class="font-weight-bold text-primary" style="font-size: 1.2rem;">₹{{order.total_price | floatformat:2}}</span>
                     </div>
 
                     <!-- Car / Delivery Boy -->
                     {% if order.order.vehicle_number %}
-                    <div class="d-flex align-items-center mb-2 px-3 py-2" style="background: #f8fafc; border-radius: 8px; font-size: 0.85rem; border: 1px solid #f1f5f9;">
+                    <div class="d-flex align-items-center mb-2 px-3 py-2" style="background: #f8fafc; border-radius: 8px; font-size: 0.95rem; border: 1px solid #f1f5f9;">
                         <i class="ri-car-line mr-2 text-primary" style="font-size: 1.1rem;"></i>
                         <span style="color: #475569;">Car Number: <strong class="text-dark">{{order.order.vehicle_number}}</strong></span>
                     </div>
                     {% elif order.order.delivery_boy %}
-                    <div class="d-flex align-items-center mb-2 px-3 py-2" style="background: #f8fafc; border-radius: 8px; font-size: 0.85rem; border: 1px solid #f1f5f9;">
+                    <div class="d-flex align-items-center mb-2 px-3 py-2" style="background: #f8fafc; border-radius: 8px; font-size: 0.95rem; border: 1px solid #f1f5f9;">
                         <i class="ri-user-follow-line mr-2 text-primary" style="font-size: 1.1rem;"></i>
                         <span style="color: #475569;">Delivery Boy: <strong class="text-dark">{{order.order.delivery_boy.first_name}}</strong></span>
                     </div>
@@ -99,7 +108,7 @@
 
                     <!-- Waiter Details -->
                     {% if request.user.groups.all.0.name == "admin" %}
-                    <div class="text-muted" style="font-size: 0.8rem; margin-top: 8px;">
+                    <div class="text-muted" style="font-size: 0.95rem; margin-top: 8px;">
                         <i class="ri-user-voice-line mr-1"></i> Waiter: <span class="font-weight-500 text-dark">{{order.order.user}}</span>
                     </div>
                     {% endif %}
@@ -111,12 +120,12 @@
                 <!-- Kitchen / Completion badging -->
                 <div class="d-flex align-items-center mb-3" style="gap: 8px;">
                     {% if order.order.take_order == True %}
-                    <span class="badge bg-warning-light text-warning" style="padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">
+                    <span class="badge bg-warning-light text-warning" style="padding: 5px 10px; border-radius: 4px; font-size: 0.85rem;">
                         <i class="ri-restaurant-line mr-1"></i> In Kitchen
                     </span>
                     {% endif %}
                     {% if order.order.completion_status == True %}
-                    <span class="badge bg-success-light text-success" style="padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">
+                    <span class="badge bg-success-light text-success" style="padding: 5px 10px; border-radius: 4px; font-size: 0.85rem;">
                         <i class="ri-check-double-line mr-1"></i> Completed
                     </span>
                     {% endif %}
@@ -124,25 +133,30 @@
 
                 <!-- Action Buttons -->
                 <div class="row no-gutters mx-n1">
-                    <div class="col-6 p-1">
-                        <button class="btn btn-dark btn-block btn-sm py-2 shadow-none" data-toggle="modal" data-target="#exampleModalScrollable{{order.order.id}}" style="border-radius: 8px; font-weight: 600; font-size: 0.8rem;">
+                    <div class="col-4 p-1">
+                        <button class="btn btn-dark btn-block btn-sm py-2 shadow-none" data-toggle="modal" data-target="#exampleModalScrollable{{order.order.id}}" style="border-radius: 8px; font-weight: 600; font-size: 0.88rem;">
                             Settle Bill
                         </button>
                     </div>
-                    <div class="col-6 p-1">
-                        <button class="btn btn-info btn-block btn-sm py-2 shadow-none text-white" data-toggle="modal" data-target="#changeTableModal{{order.order.id}}" style="border-radius: 8px; font-weight: 600; font-size: 0.8rem;">
+                    <div class="col-4 p-1">
+                        <button class="btn btn-info btn-block btn-sm py-2 shadow-none text-white" data-toggle="modal" data-target="#changeTableModal{{order.order.id}}" style="border-radius: 8px; font-weight: 600; font-size: 0.88rem;">
                             Change Table
                         </button>
                     </div>
-                    <div class="col-6 p-1">
-                        <a href="javascript:void(0);" onclick="printReceipt('{{ order.order.id }}')" class="btn btn-warning btn-block btn-sm py-2 shadow-none text-white" style="border-radius: 8px; font-weight: 600; font-size: 0.8rem;">
+                    <div class="col-4 p-1">
+                        <a href="javascript:void(0);" onclick="printReceipt('{{ order.order.id }}')" class="btn btn-warning btn-block btn-sm py-2 shadow-none text-white" style="border-radius: 8px; font-weight: 600; font-size: 0.88rem;">
                             Print Bill
                         </a>
                     </div>
                     <div class="col-6 p-1">
-                        <a href="{%url 'OrderSingle' order.order.id %}" class="btn btn-outline-primary btn-block btn-sm py-2 shadow-none" style="border-radius: 8px; font-weight: 600; font-size: 0.8rem;">
+                        <a href="{%url 'OrderSingle' order.order.id %}" class="btn btn-outline-primary btn-block btn-sm py-2 shadow-none" style="border-radius: 8px; font-weight: 600; font-size: 0.88rem;">
                             View Details
                         </a>
+                    </div>
+                    <div class="col-6 p-1">
+                        <button class="btn btn-delete-order btn-block btn-sm py-2 shadow-none" data-toggle="modal" data-target="#deleteOrderModal{{order.order.id}}" style="border-radius: 8px; font-weight: 600; font-size: 0.88rem;">
+                            <i class="ri-delete-bin-line mr-1"></i> Delete Order
+                        </button>
                     </div>
                 </div>
             </div>
@@ -210,6 +224,36 @@ aria-labelledby="changeTableModalTitle{{order.order.id}}" aria-hidden="true">
                 <button type="submit" class="btn btn-primary">Save Changes</button>
             </div>
         </form>
+    </div>
+</div>
+</div>
+
+<!-- Delete Order Confirmation Modal -->
+<div class="modal fade" id="deleteOrderModal{{order.order.id}}" tabindex="-1" role="dialog"
+aria-labelledby="deleteOrderModalTitle{{order.order.id}}" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+        <div class="modal-header" style="border-bottom: 1px solid #fee2e2; background: #fef2f2;">
+            <h5 class="modal-title text-danger" id="deleteOrderModalTitle{{order.order.id}}">
+                <i class="ri-error-warning-line mr-2"></i>Delete Order #{{order.order.token}}
+            </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body text-center py-4">
+            <div style="font-size: 3rem; color: #dc3545; margin-bottom: 15px;">
+                <i class="ri-delete-bin-line"></i>
+            </div>
+            <h6 class="mb-2">Are you sure you want to delete this order?</h6>
+            <p class="text-muted mb-0" style="font-size: 0.9rem;">This action cannot be undone. All items in this order will be permanently removed.</p>
+        </div>
+        <div class="modal-footer" style="border-top: 1px solid #f1f5f9;">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            <a href="{% url 'delete_order' order.order.id %}" class="btn btn-danger">
+                <i class="ri-delete-bin-line mr-1"></i> Delete Order
+            </a>
+        </div>
     </div>
 </div>
 </div>

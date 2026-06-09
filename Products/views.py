@@ -374,15 +374,19 @@ def OrderSingle(request,pk):
 @login_required(login_url='SignIn')
 def search_menu(request):
     query = request.GET.get('product_search', '')
-    menu = Menu.objects.filter(status = True)
+    menu = Menu.objects.filter(status=True)
     order_id = request.GET.get('order_id', '')
-
+    
     category = FoodCategory.objects.all()
-    order = Order.objects.get(id = int(order_id))
+    # Safely retrieve the order if order_id is provided and valid
+    order = None
+    if order_id and order_id.isdigit():
+        try:
+            order = Order.objects.get(id=int(order_id))
+        except Order.DoesNotExist:
+            order = None
     addons = AddOns.objects.all()
-
-
-
+    
     if query:
         results = Menu.objects.filter(name__icontains=query) | Menu.objects.filter(code__icontains=query)
     else:
@@ -693,9 +697,10 @@ def print_invoice(request, order_id):
         system_os = platform.system().lower()
         copies = rest_details.print_copies if (rest_details and rest_details.print_copies) else 1
         
-        # If print_copies is 2, the receipt.html template renders both Customer and Store copies 
-        # on separate pages in a single PDF. Thus, we only need to print the PDF once to get both copies.
-        run_copies = 1 if copies == 2 else copies
+        # The receipt.html template already renders the correct number of copies
+        # (e.g. Customer Copy + Store Copy as separate pages in one PDF when copies == 2).
+        # So we always print the PDF exactly once — no need to multiply at the printer level.
+        run_copies = 1
 
         if 'darwin' in system_os or 'linux' in system_os:
             # macOS or Linux: use standard lp command with run_copies count
@@ -1104,6 +1109,29 @@ def delete_settled_order(request,pk):
     checkout.delete()
     messages.success(request, "order deleted....")
     return redirect("ViewCheckouts")
+
+@login_required(login_url='SignIn')
+def delete_order(request, pk):
+    order = get_object_or_404(Order, id=pk)
+    order_token = order.token
+    order.items.all().delete()
+    order.delete()
+    
+    # Send WebSocket update so other clients refresh
+    try:
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "updates",
+            {
+                "type": "send_update",
+                "message": "Database updated",
+            }
+        )
+    except Exception as e:
+        print(f"Error sending WebSocket update: {e}")
+    
+    messages.success(request, f"Order #{order_token} has been deleted successfully.")
+    return redirect("Pos")
 
 
 def Reports(request):

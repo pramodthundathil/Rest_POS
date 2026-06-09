@@ -43,6 +43,7 @@ urlpatterns = [
     path('Status_Change_Menu_Finish', views.Status_Change_Menu_Finish, name='Status_Change_Menu_Finish'),
     path('SettleOrder/<int:pk>', views.SettleOrder, name='SettleOrder'),
     path('delete_settled_order/<int:pk>', views.delete_settled_order, name='delete_settled_order'),
+    path('delete_order/<int:pk>', views.delete_order, name='delete_order'),
     
     path('ViewCheckouts', views.ViewCheckouts, name='ViewCheckouts'),
     path('search-menu/', views.search_menu, name='search_menu'),
