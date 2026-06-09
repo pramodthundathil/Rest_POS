@@ -9,16 +9,16 @@
         @page {
             {% if is_server %}
             size: {{ rest_details.paper_width|default:"80mm" }} 250mm;
-            margin-top: 0px;
-            margin-bottom: 0px;
-            margin-left: 0px;
-            margin-right: 0px;
+            margin-top: 2mm;
+            margin-bottom: 2mm;
+            margin-left: 4mm;
+            margin-right: 4mm;
             {% else %}
             size: {{ rest_details.paper_width|default:"80mm" }} auto;
             margin-top: 0px;
             margin-bottom: 0px;
-            margin-left: 0px;
-            margin-right: 0px;
+            margin-left: 4mm;
+            margin-right: 4mm;
             {% endif %}
         }
 
@@ -33,7 +33,7 @@
         }
 
         .print-wrapper {
-            width: {{ rest_details.paper_width|default:"80mm" }};
+            width: 100%;
             margin: 0 auto;
             box-sizing: border-box;
             background-color: #fff;
@@ -41,7 +41,7 @@
 
         .bill-container {
             box-sizing: border-box;
-            padding: 8px 12px;
+            padding: 8px 0px;
         }
 
         .copy-label {
@@ -293,7 +293,7 @@
             <!-- Footer -->
             <div class="bill-footer">
                 <div style="font-weight: bold; margin-bottom: 2px;">Thank you for Visit</div>
-                <div style="font-weight: bold;">Please Call Again</div>
+                <div style="font-weight: bold;">Please Come Again</div>
             </div>
         </div>
         {% endif %}
@@ -468,7 +468,7 @@
                     <!-- Footer -->
                     <div class="bill-footer">
                         <div style="font-weight: bold; margin-bottom: 2px;">Thank you for Visit</div>
-                        <div style="font-weight: bold;">Please Call Again</div>
+                        <div style="font-weight: bold;">Please Come Again</div>
                     </div>
                 </div>
             {% endif %}
